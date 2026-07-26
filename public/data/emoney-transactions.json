@@ -1,0 +1,40 @@
+[
+  {
+    "id": "emoney_001",
+    "studentId": "student_001",
+    "type": "spending",
+    "amount": 15000,
+    "description": "Beli makan siang di kantin",
+    "category": "Makanan",
+    "date": "2024-12-19",
+    "location": "Kantin Pesantren"
+  },
+  {
+    "id": "emoney_002",
+    "studentId": "student_001",
+    "type": "topup",
+    "amount": 100000,
+    "description": "Top up dari orang tua",
+    "category": "Top Up",
+    "date": "2024-12-18"
+  },
+  {
+    "id": "emoney_003",
+    "studentId": "student_001",
+    "type": "spending",
+    "amount": 25000,
+    "description": "Beli alat tulis",
+    "category": "Perlengkapan",
+    "date": "2024-12-17",
+    "location": "Toko Koperasi"
+  },
+  {
+    "id": "emoney_004",
+    "studentId": "student_001",
+    "type": "topup",
+    "amount": 50000,
+    "description": "Top up saldo",
+    "category": "Top Up",
+    "date": "2024-12-15"
+  }
+]

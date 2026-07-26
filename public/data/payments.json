@@ -1,0 +1,42 @@
+[
+  {
+    "id": "pay_001",
+    "studentId": "student_001",
+    "type": "spp",
+    "amount": 500000,
+    "description": "SPP Bulan Januari 2025",
+    "status": "pending",
+    "dueDate": "2025-01-10"
+  },
+  {
+    "id": "pay_002",
+    "studentId": "student_001",
+    "type": "spp",
+    "amount": 500000,
+    "description": "SPP Bulan Desember 2024",
+    "status": "paid",
+    "dueDate": "2024-12-10",
+    "paidDate": "2024-12-08",
+    "method": "Bank Transfer"
+  },
+  {
+    "id": "pay_003",
+    "studentId": "student_001",
+    "type": "other",
+    "amount": 150000,
+    "description": "Biaya Kegiatan Ekstrakurikuler",
+    "status": "paid",
+    "dueDate": "2024-12-15",
+    "paidDate": "2024-12-14",
+    "method": "E-Money"
+  },
+  {
+    "id": "pay_004",
+    "studentId": "student_002",
+    "type": "spp",
+    "amount": 500000,
+    "description": "SPP Bulan Januari 2025",
+    "status": "pending",
+    "dueDate": "2025-01-10"
+  }
+]

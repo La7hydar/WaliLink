@@ -1,0 +1,27 @@
+[
+  {
+    "id": "admin_001",
+    "email": "admin@almunawwarah.com",
+    "phone": "0812-1111-2222",
+    "password": "admin123",
+    "name": "Admin Utama",
+    "role": "super-admin",
+    "sections": ["all"]
+  },
+  {
+    "id": "admin_002",
+    "email": "absensi@almunawwarah.com",
+    "password": "admin123",
+    "name": "Admin Absensi",
+    "role": "admin",
+    "sections": ["attendance"]
+  },
+  {
+    "id": "admin_003",
+    "email": "keuangan@almunawwarah.com",
+    "password": "admin123",
+    "name": "Admin Keuangan",
+    "role": "admin",
+    "sections": ["payment"]
+  }
+]
