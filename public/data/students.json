@@ -1,0 +1,40 @@
+[
+  {
+    "id": "student_001",
+    "name": "Ahmad Rizki",
+    "fullName": "Ahmad Rizki Maulana",
+    "nickname": "Ahmad",
+    "nisn": "0078594321",
+    "birthPlace": "Yogyakarta",
+    "birthDate": "15 Agustus 2010",
+    "age": 14,
+    "class": "Kelas 3 Tsanawiyah",
+    "grade": 9,
+    "studyClub": "Tahfidz Club Al-Hikmah",
+    "dormitory": "Asrama Al-Hikmah",
+    "roomNumber": "Kamar 15B",
+    "entryYear": "2022",
+    "status": "Aktif",
+    "profilePhoto": "",
+    "guardianId": "guardian_001"
+  },
+  {
+    "id": "student_002",
+    "name": "Fatimah Zahra",
+    "fullName": "Fatimah Zahra Azzahra",
+    "nickname": "Fatimah",
+    "nisn": "0078594322",
+    "birthPlace": "Jakarta",
+    "birthDate": "20 Juni 2011",
+    "age": 13,
+    "class": "Kelas 2 Tsanawiyah",
+    "grade": 8,
+    "studyClub": "Tahfidz Club An-Nur",
+    "dormitory": "Asrama An-Nur",
+    "roomNumber": "Kamar 10A",
+    "entryYear": "2023",
+    "status": "Aktif",
+    "profilePhoto": "",
+    "guardianId": "guardian_002"
+  }
+]

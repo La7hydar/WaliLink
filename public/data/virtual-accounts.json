@@ -1,0 +1,20 @@
+[
+  {
+    "id": "va_001",
+    "studentId": "student_001",
+    "bankName": "Bank Syariah Indonesia",
+    "accountNumber": "7770012345678",
+    "accountName": "Ahmad Rizki Maulana",
+    "swiftCode": "BSYAIDJA",
+    "purpose": "Transfer untuk kebutuhan santri dan pembayaran"
+  },
+  {
+    "id": "va_002",
+    "studentId": "student_002",
+    "bankName": "Bank Syariah Indonesia",
+    "accountNumber": "7770012345679",
+    "accountName": "Fatimah Zahra Azzahra",
+    "swiftCode": "BSYAIDJA",
+    "purpose": "Transfer untuk kebutuhan santri dan pembayaran"
+  }
+]

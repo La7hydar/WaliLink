@@ -1,0 +1,68 @@
+[
+  {
+    "id": "att_001",
+    "studentId": "student_001",
+    "date": "2024-12-19",
+    "status": "present",
+    "sessions": [
+      {
+        "name": "Sholat Subuh",
+        "time": "05:00",
+        "status": "present"
+      },
+      {
+        "name": "Pembelajaran Pagi",
+        "time": "08:00",
+        "status": "present"
+      },
+      {
+        "name": "Sholat Dzuhur",
+        "time": "12:30",
+        "status": "present"
+      },
+      {
+        "name": "Pembelajaran Siang",
+        "time": "14:00",
+        "status": "present"
+      },
+      {
+        "name": "Sholat Maghrib",
+        "time": "18:15",
+        "status": "present"
+      }
+    ]
+  },
+  {
+    "id": "att_002",
+    "studentId": "student_001",
+    "date": "2024-12-18",
+    "status": "present",
+    "sessions": [
+      {
+        "name": "Sholat Subuh",
+        "time": "05:00",
+        "status": "present"
+      },
+      {
+        "name": "Pembelajaran Pagi",
+        "time": "08:00",
+        "status": "present"
+      },
+      {
+        "name": "Sholat Dzuhur",
+        "time": "12:30",
+        "status": "present"
+      },
+      {
+        "name": "Pembelajaran Siang",
+        "time": "14:00",
+        "status": "present"
+      },
+      {
+        "name": "Sholat Maghrib",
+        "time": "18:15",
+        "status": "late"
+      }
+    ]
+  }
+]

@@ -1,0 +1,56 @@
+[
+  {
+    "id": "guardian_001",
+    "title": "Bapak",
+    "fullName": "Amaluddin La Mani",
+    "relationship": "Ayah Kandung",
+    "phone": "0812-3456-7890",
+    "whatsapp": "0812-3456-7890",
+    "email": "demo@walisant.com",
+    "password": "demo123",
+    "occupation": "Wiraswasta",
+    "company": "CV. Berkah Jaya",
+    "address": {
+      "street": "Jl. Raya Pondok No. 123",
+      "village": "Kebayoran",
+      "district": "Kebayoran Baru",
+      "regency": "Jakarta Selatan",
+      "province": "DKI Jakarta",
+      "postalCode": "12180",
+      "region": "Jakarta Selatan"
+    },
+    "emergencyContact": {
+      "contactName": "Ibu Siti Aminah",
+      "relationship": "Ibu Kandung",
+      "phone": "0856-7890-1234"
+    },
+    "students": ["student_001"]
+  },
+  {
+    "id": "guardian_002",
+    "title": "Ibu",
+    "fullName": "Nurlaila Hanum",
+    "relationship": "Ibu Kandung",
+    "phone": "0813-5555-6666",
+    "whatsapp": "0813-5555-6666",
+    "email": "nurlaila@example.com",
+    "password": "demo123",
+    "occupation": "Guru",
+    "company": "SD Negeri 1",
+    "address": {
+      "street": "Jl. Merdeka No. 45",
+      "village": "Cikini",
+      "district": "Menteng",
+      "regency": "Jakarta Pusat",
+      "province": "DKI Jakarta",
+      "postalCode": "10330",
+      "region": "Jakarta Pusat"
+    },
+    "emergencyContact": {
+      "contactName": "Bapak Ahmad Fauzi",
+      "relationship": "Ayah Kandung",
+      "phone": "0812-9999-8888"
+    },
+    "students": ["student_002"]
+  }
+]

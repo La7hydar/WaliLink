@@ -1,0 +1,82 @@
+[
+  {
+    "id": "score_001",
+    "studentId": "student_001",
+    "subject": "Al-Quran",
+    "score": 88,
+    "fullMark": 100,
+    "grade": "A-",
+    "semester": "Ganjil",
+    "year": "2024"
+  },
+  {
+    "id": "score_002",
+    "studentId": "student_001",
+    "subject": "Hadits",
+    "score": 85,
+    "fullMark": 100,
+    "grade": "B+",
+    "semester": "Ganjil",
+    "year": "2024"
+  },
+  {
+    "id": "score_003",
+    "studentId": "student_001",
+    "subject": "Fiqih",
+    "score": 90,
+    "fullMark": 100,
+    "grade": "A-",
+    "semester": "Ganjil",
+    "year": "2024"
+  },
+  {
+    "id": "score_004",
+    "studentId": "student_001",
+    "subject": "Aqidah Akhlaq",
+    "score": 92,
+    "fullMark": 100,
+    "grade": "A",
+    "semester": "Ganjil",
+    "year": "2024"
+  },
+  {
+    "id": "score_005",
+    "studentId": "student_001",
+    "subject": "Bahasa Arab",
+    "score": 78,
+    "fullMark": 100,
+    "grade": "B",
+    "semester": "Ganjil",
+    "year": "2024"
+  },
+  {
+    "id": "score_006",
+    "studentId": "student_001",
+    "subject": "Matematika",
+    "score": 82,
+    "fullMark": 100,
+    "grade": "B+",
+    "semester": "Ganjil",
+    "year": "2024"
+  },
+  {
+    "id": "score_007",
+    "studentId": "student_001",
+    "subject": "Bahasa Indonesia",
+    "score": 87,
+    "fullMark": 100,
+    "grade": "A-",
+    "semester": "Ganjil",
+    "year": "2024"
+  },
+  {
+    "id": "score_008",
+    "studentId": "student_001",
+    "subject": "Bahasa Inggris",
+    "score": 79,
+    "fullMark": 100,
+    "grade": "B",
+    "semester": "Ganjil",
+    "year": "2024"
+  }
+]
