@@ -4,10 +4,9 @@
 
 Aplikasi ini sekarang menggunakan **arsitektur data modular** yang memungkinkan Anda:
 
-✅ Menjalankan aplikasi 100% offline dengan database lokal  
+✅ Menjalankan modul yang tersedia dalam mode offline dengan database lokal
 ✅ Mengubah data santri dengan mudah melalui file JSON  
-✅ Migrasi ke server backend dengan mudah di masa depan  
-✅ Tidak perlu koneksi internet sama sekali  
+✅ Memuat login wali dan Beranda dari Supabase
 
 ## 📁 Lokasi File Data
 
@@ -25,11 +24,27 @@ File ini berisi semua data santri, wali, admin, pembayaran, prestasi, dan lainny
 
 ### 1. Menjalankan Aplikasi
 
-Aplikasi sudah siap digunakan dengan data demo:
+Akses wali sementara memakai Supabase Auth email/password dengan confirmation email. Phone Auth belum dipakai dan boleh tetap nonaktif; credential Twilio tidak diperlukan untuk login email.
 
-- **Wali Santri Login:**
-  - Email: `demo@walisant.com`
-  - Password: `demo123`
+1. `.env.local` menggunakan `VITE_SUPABASE_URL` dan `VITE_SUPABASE_PUBLISHABLE_KEY`. Publishable key aman untuk client; jangan gunakan service-role key.
+2. Di Supabase Dashboard, pastikan **Authentication > Sign In / Providers > Email > Confirm email** aktif.
+3. Tambahkan `http://127.0.0.1:5173/**` ke **Authentication > URL Configuration > Redirect URLs** agar confirmation link kembali ke aplikasi lokal.
+4. Email `haidarahnaf137@gmail.com` sudah dicatat pada guardian demo **Ahnaf Haidar**. Untuk guardian lain, administrator harus mencatat email aktif yang sama pada record guardian yang telah disetujui. Contoh SQL untuk record demo:
+
+```sql
+UPDATE public.guardians
+SET email = lower('haidarahnaf137@gmail.com')
+WHERE id = '394a1763-3541-4e1d-a29f-81da571347c1'::uuid
+  AND auth_user_id IS NULL;
+```
+
+5. Di aplikasi pilih **Daftar Akun Wali**. Email sudah terisi: `haidarahnaf137@gmail.com`; isi password pilihan Anda, nama anak **Haidar Ahnaf**, dan tanggal lahir demo `2010-04-12`. Klik tautan konfirmasi yang masuk ke email, kembali ke aplikasi, lalu tekan **Saya sudah verifikasi email** dan lanjutkan aktivasi.
+
+Record uji tersimpan sebagai wali **Ahnaf Haidar** dan anak **Haidar Ahnaf** (`DUMMY-2026-001`), dengan lokasi umum Sulawesi. Nomor telepon `+628135442907` tetap tersimpan untuk aktivasi Phone Auth di masa depan; tanggal lahir, kelas, dan detail lain masih dummy.
+
+Supabase default SMTP mungkin hanya mengirim ke alamat anggota organisasi. Gunakan email anggota project untuk test atau pasang SMTP provider Auth agar email Anda bisa menerima tautan. Phone Auth dapat diaktifkan kembali nanti bersama provider SMS; jangan simpan Twilio secret di aplikasi.
+
+Login admin masih memakai data lokal demo:
 
 - **Admin Login:**
   - Email: `admin@almunawwarah.com`
@@ -119,7 +134,7 @@ export const initialAchievements = [
 ];
 ```
 
-## 🔄 Cara Migrasi ke Server Backend
+## 🔄 Konfigurasi Backend Lain
 
 Saat Anda siap untuk menghubungkan ke server backend:
 

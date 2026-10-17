@@ -1,6 +1,7 @@
 import { Badge } from './ui/badge';
-import { WifiOff } from 'lucide-react';
+import { Wifi, WifiOff } from 'lucide-react';
 import { config } from '../config/environment';
+import { isSupabaseConfigured } from '../supabase/client';
 
 interface OfflineModeIndicatorProps {
   variant?: 'badge' | 'banner' | 'tooltip';
@@ -12,7 +13,7 @@ export function OfflineModeIndicator({
   className = '' 
 }: OfflineModeIndicatorProps) {
   // Only show if offline mode is enabled
-  if (!config.offline.enabled) {
+  if (!config.offline.enabled && !isSupabaseConfigured) {
     return null;
   }
 
@@ -20,10 +21,14 @@ export function OfflineModeIndicator({
     return (
       <Badge 
         variant="outline" 
-        className={`bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800 ${className}`}
+        className={`${isSupabaseConfigured
+          ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800'
+          : 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800'} ${className}`}
       >
-        <WifiOff className="w-3 h-3 mr-1" />
-        Mode Offline
+        {isSupabaseConfigured
+          ? <Wifi className="w-3 h-3 mr-1" />
+          : <WifiOff className="w-3 h-3 mr-1" />}
+        {isSupabaseConfigured ? 'Supabase Terkonfigurasi' : 'Mode Offline'}
       </Badge>
     );
   }
@@ -32,8 +37,10 @@ export function OfflineModeIndicator({
     return (
       <div className={`bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800 px-4 py-2 ${className}`}>
         <div className="flex items-center justify-center gap-2 text-xs text-blue-700 dark:text-blue-300">
-          <WifiOff className="w-3 h-3" />
-          <span>Aplikasi berjalan dalam mode offline. Semua data disimpan di perangkat lokal.</span>
+          {isSupabaseConfigured ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+          <span>{isSupabaseConfigured
+            ? 'Login wali dan Beranda menggunakan Supabase; fitur lain masih memakai data lokal.'
+            : 'Aplikasi berjalan dalam mode offline. Data demo disimpan di perangkat lokal.'}</span>
         </div>
       </div>
     );

@@ -1,16 +1,12 @@
-# Aplikasi Wali Santri Pondok Pesantren (Offline Mode)
+# Aplikasi Wali Santri Pondok Pesantren
 
-Aplikasi mobile-first untuk wali santri yang berjalan sepenuhnya **offline** dengan data tersimpan di perangkat lokal.
+Aplikasi mobile-first dengan autentikasi dan Beranda wali dari Supabase. Modul lain yang belum dimigrasikan masih menggunakan data lokal.
 
-## 🔴 **MODE OFFLINE - PENTING!**
+## **Mode Data Saat Ini**
 
-⚠️ **Aplikasi ini telah diubah untuk berjalan sepenuhnya OFFLINE:**
-- ✅ Tidak memerlukan koneksi internet
-- ✅ Semua data disimpan di browser lokal (local storage)
-- ✅ Tidak ada koneksi ke server atau cloud
-- ✅ Fitur backup/restore data tersedia
+Login wali dan Beranda menggunakan Supabase Auth/Database. Pembayaran, administrasi, dan modul lain yang belum dimigrasikan masih memakai data lokal/demo.
 
-📖 **Baca dokumentasi lengkap:** [Offline Mode Guide](./docs/offline-mode.md)
+Untuk setup email verification dan akun uji, lihat [Panduan Setup Data](../../README_DATA_SETUP.md). Fitur backup/restore lokal tetap tersedia untuk modul offline.
 
 ## ✨ Fitur Utama
 

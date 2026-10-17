@@ -1,0 +1,32 @@
+[
+  {
+    "id": "photo_001",
+    "studentId": "student_001",
+    "url": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=300&fit=crop",
+    "title": "Kegiatan Tahfidz Pagi",
+    "description": "Kegiatan hafalan Al-Quran di pagi hari",
+    "category": "Kegiatan",
+    "date": "2024-12-19",
+    "tags": ["tahfidz", "pagi", "alquran"]
+  },
+  {
+    "id": "photo_002",
+    "studentId": "student_001",
+    "url": "https://images.unsplash.com/photo-1543269664-56d93c1b41a6?w=400&h=300&fit=crop",
+    "title": "Pembelajaran Fiqih",
+    "description": "Suasana pembelajaran Fiqih di kelas",
+    "category": "Pembelajaran",
+    "date": "2024-12-18",
+    "tags": ["fiqih", "kelas", "pembelajaran"]
+  },
+  {
+    "id": "photo_003",
+    "studentId": "student_001",
+    "url": "https://images.unsplash.com/photo-1497486751825-1233686d5937?w=400&h=300&fit=crop",
+    "title": "Sholat Berjamaah",
+    "description": "Sholat Maghrib berjamaah di masjid pesantren",
+    "category": "Ibadah",
+    "date": "2024-12-17",
+    "tags": ["sholat", "maghrib", "jamaah", "masjid"]
+  }
+]

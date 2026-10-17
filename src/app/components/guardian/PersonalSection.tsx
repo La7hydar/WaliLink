@@ -84,10 +84,10 @@ export function PersonalSection({ studentData, onLogout, onShowStudentSettings }
   };
 
   return (
-    <div className="h-full bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-full bg-gray-50 dark:bg-gray-900">
       {/* Content Area */}
 
-      <div className="flex-1 p-4 overflow-auto">
+      <div className="p-4 pb-8">
         {/* Profile Section */}
         <Card className="mb-4">
           <CardHeader className="pb-4">

@@ -3,6 +3,7 @@ import { Button } from './ui/button';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { BookOpen, WifiOff } from 'lucide-react';
 import { OfflineModeIndicator } from './OfflineModeIndicator';
+import { isSupabaseConfigured } from '../supabase/client';
 import belajarKomputer from './Images/belajar_komputer.png';
 import kegiatanPramuka from './Images/kegiatan_pramuka.png';
 import pensi from './Images/pensi.png';
@@ -96,8 +97,8 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
             Pantau perkembangan putra-putri Anda di pondok pesantren
           </p>
           <div className="mt-3 flex items-center justify-center gap-2 text-xs text-emerald-700">
-            <WifiOff className="w-3 h-3" />
-            <span>Mode Offline - Data Lokal</span>
+            {isSupabaseConfigured ? <BookOpen className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+            <span>{isSupabaseConfigured ? 'Login wali & Beranda: Supabase' : 'Mode Offline - Data Lokal'}</span>
           </div>
         </div>
 
@@ -155,7 +156,9 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
           </Button>
           
           <p className="text-xs text-emerald-600 text-center pt-2">
-            Aplikasi berjalan offline. Semua data tersimpan di perangkat lokal.
+            {isSupabaseConfigured
+              ? 'Login wali dan Beranda memakai Supabase; fitur lainnya masih menggunakan data lokal.'
+              : 'Aplikasi berjalan offline. Data demo tersimpan di perangkat lokal.'}
           </p>
         </div>
       </div>

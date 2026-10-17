@@ -30,7 +30,7 @@ export function LoginScreen({ onLogin, onBack, isSignUp = false, title, isAdmin 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [loginMethod, setLoginMethod] = useState<'phone' | 'email'>('phone');
+  const [loginMethod, setLoginMethod] = useState<'phone' | 'email'>(isAdmin ? 'phone' : 'email');
   const [error, setError] = useState('');
 
   const handleLogin = async () => {
@@ -43,7 +43,7 @@ export function LoginScreen({ onLogin, onBack, isSignUp = false, title, isAdmin 
     // Simulate API call
     setTimeout(() => {
       onLogin({
-        phone: loginMethod === 'phone' ? phoneNumber : undefined,
+        phone: isAdmin && loginMethod === 'phone' ? phoneNumber : undefined,
         email: loginMethod === 'email' ? email : undefined,
         password
       });
@@ -115,18 +115,20 @@ export function LoginScreen({ onLogin, onBack, isSignUp = false, title, isAdmin 
           </CardHeader>
           <CardContent>
             <Tabs value={loginMethod} onValueChange={(value) => setLoginMethod(value as 'phone' | 'email')}>
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="phone" className="flex items-center gap-2">
-                  <Phone className="h-4 w-4" />
-                  Nomor HP
-                </TabsTrigger>
-                <TabsTrigger value="email" className="flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
-                  Email
-                </TabsTrigger>
-              </TabsList>
+              {isAdmin && (
+                <TabsList className="grid w-full grid-cols-2 mb-6">
+                  <TabsTrigger value="phone" className="flex items-center gap-2">
+                    <Phone className="h-4 w-4" />
+                    Nomor HP
+                  </TabsTrigger>
+                  <TabsTrigger value="email" className="flex items-center gap-2">
+                    <Mail className="h-4 w-4" />
+                    Email
+                  </TabsTrigger>
+                </TabsList>
+              )}
 
-              <TabsContent value="phone" className="space-y-4">
+              {isAdmin && <TabsContent value="phone" className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">Nomor HP</label>
                   <div className="relative">
@@ -141,7 +143,7 @@ export function LoginScreen({ onLogin, onBack, isSignUp = false, title, isAdmin 
                     />
                   </div>
                 </div>
-              </TabsContent>
+              </TabsContent>}
 
               <TabsContent value="email" className="space-y-4">
                 <div>
@@ -213,30 +215,31 @@ export function LoginScreen({ onLogin, onBack, isSignUp = false, title, isAdmin 
           </CardContent>
         </Card>
 
-        {/* Demo Credentials - only show for login */}
+        {/* Show local admin demo credentials; guardian accounts use Supabase Auth. */}
         {!isSignUp && (
           <Card className="mt-4 border-emerald-200 bg-emerald-50">
             <CardContent className="p-4">
               <div className="flex items-start gap-2">
                 <AlertCircle className="h-4 w-4 text-emerald-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-emerald-800 mb-1">Demo Login</p>
-                  <p className="text-xs text-emerald-700 mb-2">Gunakan kredensial berikut untuk demo:</p>
-                  <div className="space-y-1 text-xs text-emerald-600">
-                    {isAdmin ? (
-                      <>
+                  {isAdmin ? (
+                    <>
+                      <p className="text-sm font-medium text-emerald-800 mb-1">Demo Login Admin</p>
+                      <p className="text-xs text-emerald-700 mb-2">Gunakan kredensial lokal:</p>
+                      <div className="space-y-1 text-xs text-emerald-600">
                         <p><strong>Email:</strong> admin@almunawwarah.com</p>
                         <p><strong>HP:</strong> 0812-1111-2222</p>
                         <p><strong>Password:</strong> admin123</p>
-                      </>
-                    ) : (
-                      <>
-                        <p><strong>HP:</strong> 0812-3456-7890</p>
-                        <p><strong>Email:</strong> demo@walisant.com</p>
-                        <p><strong>Password:</strong> demo123</p>
-                      </>
-                    )}
-                  </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm font-medium text-emerald-800 mb-1">Login Wali</p>
+                      <p className="text-xs text-emerald-700">
+                        Gunakan akun Supabase Auth yang sudah ditautkan ke data wali oleh administrator.
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
             </CardContent>

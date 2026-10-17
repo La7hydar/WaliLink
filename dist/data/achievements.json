@@ -1,0 +1,34 @@
+[
+  {
+    "id": "ach_001",
+    "studentId": "student_001",
+    "title": "Juara 2 Lomba Tahfidz Al-Quran",
+    "description": "Meraih juara 2 dalam lomba hafalan Al-Quran tingkat kabupaten",
+    "category": "religious",
+    "level": "kabupaten",
+    "position": "Juara 2",
+    "date": "2024-11-15",
+    "certificate": "cert_tahfidz_001.pdf"
+  },
+  {
+    "id": "ach_002",
+    "studentId": "student_001",
+    "title": "Siswa Terbaik Semester Ganjil",
+    "description": "Meraih prestasi akademik terbaik di kelas",
+    "category": "academic",
+    "level": "pesantren",
+    "position": "Peringkat 1",
+    "date": "2024-12-20"
+  },
+  {
+    "id": "ach_003",
+    "studentId": "student_001",
+    "title": "Juara 3 Olimpiade Matematika",
+    "description": "Meraih juara 3 dalam olimpiade matematika tingkat provinsi",
+    "category": "academic",
+    "level": "provinsi",
+    "position": "Juara 3",
+    "date": "2024-10-08",
+    "certificate": "cert_math_001.pdf"
+  }
+]

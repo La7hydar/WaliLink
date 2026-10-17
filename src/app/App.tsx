@@ -7,7 +7,7 @@ import { LanguageProvider } from './components/LanguageProvider';
 import { ServerSelectionScreen } from './components/ServerSelectionScreen';
 import { CreateServerScreen } from './components/CreateServerScreen';
 import { LoginOptionsScreen } from './components/LoginOptionsScreen';
-import { GuardianAccountCreation } from './components/GuardianAccountCreation';
+import { GuardianEmailRegistration } from './components/GuardianEmailRegistration';
 import { AdminDashboard } from './components/AdminDashboard';
 import { TutorialScreen } from './components/TutorialScreen';
 import { LanguageSelection } from './components/LanguageSelection';
@@ -64,6 +64,23 @@ export default function App() {
         console.log('Data provider initialized successfully');
       } catch (error) {
         console.error('Failed to initialize data provider:', error);
+      }
+
+      try {
+        const guardian = await getAuthService().getCurrentGuardian();
+        if (guardian) {
+          setCurrentUser({ type: 'guardian', ...guardian });
+          setAppState('guardian-authenticated');
+          return;
+        }
+
+        const pendingEmail = await getAuthService().getPendingGuardianRegistrationEmail();
+        if (pendingEmail) {
+          setCurrentUser({ type: 'guardian-registration', email: pendingEmail });
+          setAppState('guardian-signup');
+        }
+      } catch (error) {
+        console.error('Failed to restore guardian session:', error);
       }
     };
 
@@ -130,7 +147,7 @@ export default function App() {
     } catch (error) {
       setIsLoading(false);
       console.error('Authentication error:', error);
-      alert('Login gagal. Terjadi kesalahan sistem.');
+      alert(error instanceof Error ? error.message : 'Login gagal. Terjadi kesalahan sistem.');
     }
   };
 
@@ -236,17 +253,9 @@ export default function App() {
     setAppState('admin-section-authenticated');
   };
 
-  const handleGuardianAccountCreated = async (guardianData: any) => {
-    try {
-      const authService = getAuthService();
-      const newGuardian = await authService.createGuardianAccount(guardianData);
-
-      setCurrentUser({ type: 'guardian', ...newGuardian });
-      setAppState('guardian-authenticated');
-    } catch (error) {
-      console.error('Failed to create guardian account:', error);
-      alert('Gagal membuat akun. Silakan coba lagi.');
-    }
+  const handleGuardianAccountCreated = (guardianData: any) => {
+    setCurrentUser({ type: 'guardian', ...guardianData });
+    setAppState('guardian-authenticated');
   };
 
   // Navigation Handlers
@@ -266,6 +275,11 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    if (currentUser?.type === 'guardian') {
+      void getAuthService().signOutGuardian().catch((error) => {
+        console.error('Guardian sign out failed:', error);
+      });
+    }
     setCurrentUser(null);
     setAppState('login-options');
   };
@@ -324,9 +338,11 @@ export default function App() {
       
       case 'guardian-signup':
         return (
-          <GuardianAccountCreation 
+          <GuardianEmailRegistration
             onBack={handleBackToLoginOptions}
             onAccountCreated={handleGuardianAccountCreated}
+            initialEmail={currentUser?.email}
+            emailConfirmed={currentUser?.type === 'guardian-registration'}
           />
         );
       
@@ -351,6 +367,7 @@ export default function App() {
       case 'guardian-authenticated':
         return <GuardianApp 
           guardianData={{
+            authUserId: currentUser?.authUserId || currentUser?.id || '',
             name: currentUser?.name || 'Wali Santri',
             email: currentUser?.email || '',
             phone: currentUser?.phone || '',

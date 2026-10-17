@@ -45,10 +45,11 @@ import { ChatSection } from './guardian/ChatSection';
 import { DompetSantriScreen } from './guardian/DompetSantriScreen';
 import { SendAllowanceModal } from './guardian/SendAllowanceModal';
 import { useLanguage } from '../hooks/useLanguage';
-import analytics from '../utils/analytics';
+import { getGuardianHomeData, type GuardianHomeChild } from '../services/GuardianHomeService';
 
 interface GuardianAppProps {
   guardianData: {
+    authUserId: string;
     name: string;
     email: string;
     phone: string;
@@ -58,23 +59,25 @@ interface GuardianAppProps {
   onLogout: () => void;
 }
 
-interface ChildData {
-  id: string;
-  stanbuk: string;
-  name: string;
-  class: string;
-  room: string;
-  photo?: string;
-  birthDate: string;
-  status: 'active' | 'graduated' | 'alumni';
-  notifications: number;
-  sppStatus: string;
-  attendanceRate: number;
-  emoneyBalance: number;
-  lastPayment: string;
-  recentAchievement: string;
-  performanceData: Array<{ subject: string; score: number }>;
-}
+type ChildData = GuardianHomeChild;
+
+const EMPTY_CHILD: ChildData = {
+  id: '',
+  stanbuk: '',
+  name: 'Data anak belum tersedia',
+  class: '-',
+  room: '-',
+  birthDate: '',
+  status: 'active',
+  notifications: 0,
+  violations: null,
+  sppStatus: '-',
+  attendanceRate: null,
+  emoneyBalance: 0,
+  lastPayment: '',
+  recentAchievement: '',
+  performanceData: [],
+};
 
 export function GuardianApp({ guardianData, onLogout }: GuardianAppProps) {
   const [selectedSection, setSelectedSection] = useState('home');
@@ -90,89 +93,17 @@ export function GuardianApp({ guardianData, onLogout }: GuardianAppProps) {
   const [showSendAllowance, setShowSendAllowance] = useState(false);
   const [showProfileInfo, setShowProfileInfo] = useState(false);
   const [showStudentSettings, setShowStudentSettings] = useState(false);
-  const [sppSemester, setSppSemester] = useState('2024/2025 Ganjil');
-  const [transactionSemester, setTransactionSemester] = useState('2024/2025 Ganjil');
-  const [currentBalance, setCurrentBalance] = useState(2500000);
+  const [sppSemester, setSppSemester] = useState<'current' | 'previous'>('current');
+  const [transactionSemester, setTransactionSemester] = useState<'current' | 'previous'>('current');
+  const [currentBalance, setCurrentBalance] = useState(0);
   const { t } = useLanguage();
 
-  // Multi-children data with all required properties
-  const [children, setChildren] = useState<ChildData[]>([
-    {
-      id: '1',
-      stanbuk: '2023001',
-      name: 'Ahnaf Haidar',
-      class: '2 Wusta',
-      room: 'Kamar 1A',
-      photo: '',
-      birthDate: '2008-05-15',
-      status: 'active',
-      notifications: 3,
-      sppStatus: 'Lunas',
-      attendanceRate: 95,
-      emoneyBalance: 250000,
-      lastPayment: '15 Des 2024',
-      recentAchievement: 'Juara 1 Lomba Tahfidz',
-      performanceData: [
-        { subject: 'Akhlak', score: 90 },
-        { subject: 'Tahfidz', score: 95 },
-        { subject: 'Bahasa Arab', score: 85 },
-        { subject: 'Fiqih', score: 88 },
-        { subject: 'Hadits', score: 92 },
-        { subject: 'Tafsir', score: 87 }
-      ]
-    },
-    {
-      id: '2',
-      stanbuk: '2023045',
-      name: 'Raihan Firdaus',
-      class: '1 Ula',
-      room: 'Kamar 2B',
-      photo: '',
-      birthDate: '2010-03-18',
-      status: 'active',
-      notifications: 2,
-      sppStatus: 'Lunas',
-      attendanceRate: 97,
-      emoneyBalance: 320000,
-      lastPayment: '12 Des 2024',
-      recentAchievement: 'Juara 2 Lomba Kaligrafi',
-      performanceData: [
-        { subject: 'Akhlak', score: 92 },
-        { subject: 'Tahfidz', score: 90 },
-        { subject: 'Bahasa Arab', score: 88 },
-        { subject: 'Fiqih', score: 91 },
-        { subject: 'Hadits', score: 89 },
-        { subject: 'Tafsir', score: 90 }
-      ]
-    },
-    {
-      id: '3',
-      stanbuk: '2024078',
-      name: 'Zidny Huda Qonita',
-      class: '3 Ulya',
-      room: 'Kamar 4A',
-      photo: '',
-      birthDate: '2007-11-25',
-      status: 'active',
-      notifications: 1,
-      sppStatus: 'Lunas',
-      attendanceRate: 98,
-      emoneyBalance: 280000,
-      lastPayment: '14 Des 2024',
-      recentAchievement: 'Juara 1 Lomba Khitobah',
-      performanceData: [
-        { subject: 'Akhlak', score: 94 },
-        { subject: 'Tahfidz', score: 93 },
-        { subject: 'Bahasa Arab', score: 91 },
-        { subject: 'Fiqih', score: 95 },
-        { subject: 'Hadits', score: 92 },
-        { subject: 'Tafsir', score: 94 }
-      ]
-    }
-  ]);
-
-  const [currentChildId, setCurrentChildId] = useState('1');
-  const currentChild = children.find(c => c.id === currentChildId) || children[0];
+  const [children, setChildren] = useState<ChildData[]>([]);
+  const [currentChildId, setCurrentChildId] = useState('');
+  const [homeLoading, setHomeLoading] = useState(true);
+  const [homeError, setHomeError] = useState('');
+  const [homeRefreshToken, setHomeRefreshToken] = useState(0);
+  const currentChild = children.find((child) => child.id === currentChildId) || children[0] || EMPTY_CHILD;
 
   // Data 6 item navigasi
   const navigationItems = [
@@ -200,10 +131,38 @@ export function GuardianApp({ guardianData, onLogout }: GuardianAppProps) {
     return rotated.slice(0, 5);
   };
 
-  // Initialize analytics on mount
+  // Load the signed-in guardian's profile and child summaries.
   useEffect(() => {
-    // Analytics disabled in offline mode
-  }, []);
+    let isCurrent = true;
+    setHomeLoading(true);
+    setHomeError('');
+
+    if (!guardianData.authUserId) {
+      setHomeError('Sesi login wali tidak ditemukan. Silakan login kembali.');
+      setHomeLoading(false);
+      return;
+    }
+
+    getGuardianHomeData(guardianData.authUserId)
+      .then(({ children: guardianChildren }) => {
+        if (!isCurrent) return;
+        setChildren(guardianChildren);
+        setCurrentChildId(guardianChildren[0]?.id ?? '');
+        setCurrentBalance(guardianChildren[0]?.emoneyBalance ?? 0);
+      })
+      .catch((error) => {
+        if (!isCurrent) return;
+        console.error('Failed to load guardian home data:', error);
+        setHomeError(error instanceof Error ? error.message : 'Data Beranda gagal dimuat.');
+      })
+      .finally(() => {
+        if (isCurrent) setHomeLoading(false);
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [guardianData.authUserId, homeRefreshToken]);
 
   const handleSectionChange = (section: string) => {
     setSelectedSection(section);
@@ -213,6 +172,8 @@ export function GuardianApp({ guardianData, onLogout }: GuardianAppProps) {
 
   const handleChildSwitch = (childId: string) => {
     setCurrentChildId(childId);
+    const selectedChild = children.find((child) => child.id === childId);
+    if (selectedChild) setCurrentBalance(selectedChild.emoneyBalance);
   };
 
   const handleTopUp = () => {
@@ -256,6 +217,7 @@ export function GuardianApp({ guardianData, onLogout }: GuardianAppProps) {
                 size="sm"
                 className="p-0 h-auto hover:bg-transparent"
                 onClick={() => setShowChildSelector(true)}
+                disabled={children.length === 0}
               >
                 <Avatar className="h-12 w-12 border-2 border-white/20">
                   <AvatarImage 
@@ -325,7 +287,9 @@ export function GuardianApp({ guardianData, onLogout }: GuardianAppProps) {
                   <CheckCircle className="h-4 w-4 text-emerald-200" />
                   <span className="text-xs font-medium text-emerald-100">Kehadiran</span>
                 </div>
-                <p className="text-sm font-bold text-white">{currentChild.attendanceRate}%</p>
+                <p className="text-sm font-bold text-white">
+                  {currentChild.attendanceRate === null ? '-' : `${currentChild.attendanceRate}%`}
+                </p>
               </div>
             </div>
           )}
@@ -341,7 +305,20 @@ export function GuardianApp({ guardianData, onLogout }: GuardianAppProps) {
 
       {/* Content Area */}
       <main className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900 pb-[calc(5rem+env(safe-area-inset-bottom,0px))]">
-        {showNotifications ? (
+        {homeLoading ? (
+          <div className="p-6 text-center text-sm text-muted-foreground">Memuat data Beranda...</div>
+        ) : homeError ? (
+          <div className="p-6 text-center space-y-3">
+            <p className="text-sm text-muted-foreground">{homeError}</p>
+            <Button variant="outline" onClick={() => setHomeRefreshToken((token) => token + 1)}>
+              Coba lagi
+            </Button>
+          </div>
+        ) : children.length === 0 ? (
+          <div className="p-6 text-center text-sm text-muted-foreground">
+            Belum ada siswa yang terhubung ke akun wali ini. Hubungi administrator.
+          </div>
+        ) : showNotifications ? (
           <NotificationSection
             onClose={() => setShowNotifications(false)}
             notificationCount={currentChild.notifications}
@@ -447,27 +424,34 @@ export function GuardianApp({ guardianData, onLogout }: GuardianAppProps) {
                 <CardTitle className="text-base">Aktivitas Terbaru</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                  <div className="w-8 h-8 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center">
-                    <Trophy className="h-4 w-4 text-green-600 dark:text-green-300" />
+                {currentChild.recentAchievement && (
+                  <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                    <div className="w-8 h-8 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center">
+                      <Trophy className="h-4 w-4 text-green-600 dark:text-green-300" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">Prestasi Terbaru</p>
+                      <p className="text-xs text-muted-foreground">{currentChild.recentAchievement}</p>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Prestasi Baru</p>
-                    <p className="text-xs text-muted-foreground">{currentChild.recentAchievement}</p>
-                  </div>
-                  <span className="text-xs text-muted-foreground">2 hari lalu</span>
-                </div>
+                )}
 
-                <div className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <div className="w-8 h-8 bg-blue-100 dark:bg-blue-800 rounded-full flex items-center justify-center">
-                    <DollarSign className="h-4 w-4 text-blue-600 dark:text-blue-300" />
+                {currentChild.lastPayment && (
+                  <div className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                    <div className="w-8 h-8 bg-blue-100 dark:bg-blue-800 rounded-full flex items-center justify-center">
+                      <DollarSign className="h-4 w-4 text-blue-600 dark:text-blue-300" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">Pembayaran SPP</p>
+                      <p className="text-xs text-muted-foreground">Pembayaran terakhir berhasil</p>
+                    </div>
+                    <span className="text-xs text-muted-foreground">{currentChild.lastPayment}</span>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Pembayaran SPP</p>
-                    <p className="text-xs text-muted-foreground">Bulan Desember - Lunas</p>
-                  </div>
-                  <span className="text-xs text-muted-foreground">{currentChild.lastPayment}</span>
-                </div>
+                )}
+
+                {!currentChild.recentAchievement && !currentChild.lastPayment && (
+                  <p className="text-sm text-muted-foreground">Belum ada aktivitas terbaru.</p>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -507,12 +491,11 @@ export function GuardianApp({ guardianData, onLogout }: GuardianAppProps) {
         ) : selectedSection === 'discipline' && !showDisciplineProgress ? (
           <DisciplineSection 
             studentData={currentChild}
-            onShowProgress={() => setShowDisciplineProgress(true)}
+            onShowDisciplineProgress={() => setShowDisciplineProgress(true)}
           />
         ) : selectedSection === 'discipline' && showDisciplineProgress ? (
           <DisciplineProgressScreen
             onBack={() => setShowDisciplineProgress(false)}
-            studentData={currentChild}
           />
         ) : selectedSection === 'achievement' ? (
           <AchievementSection studentData={currentChild} />

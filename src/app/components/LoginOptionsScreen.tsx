@@ -109,9 +109,9 @@ export function LoginOptionsScreen({
                 <div className="text-sm text-gray-600 dark:text-gray-400 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
                   <p>📝 Persiapkan data:</p>
                   <ul className="list-disc list-inside mt-1 space-y-1">
-                    <li>Data diri wali</li>
-                    <li>Data anak (nama, kelas, kamar)</li>
-                    <li>Nomor HP untuk verifikasi</li>
+                    <li>Email yang aktif</li>
+                    <li>Nama dan tanggal lahir anak</li>
+                    <li>Password akun</li>
                   </ul>
                 </div>
                 <Button 

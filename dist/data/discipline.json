@@ -1,0 +1,38 @@
+[
+  {
+    "id": "disc_001",
+    "studentId": "student_001",
+    "type": "violation",
+    "title": "Terlambat Sholat Maghrib",
+    "description": "Terlambat mengikuti sholat maghrib berjamaah di masjid",
+    "category": "Ibadah",
+    "date": "2024-12-18",
+    "reportedBy": "Ustadz Ahmad",
+    "points": -5,
+    "status": "confirmed"
+  },
+  {
+    "id": "disc_002",
+    "studentId": "student_001",
+    "type": "reward",
+    "title": "Membantu Membersihkan Masjid",
+    "description": "Aktif membantu membersihkan masjid setelah sholat",
+    "category": "Kebersihan",
+    "date": "2024-12-17",
+    "reportedBy": "Ustadz Mahmud",
+    "points": 10,
+    "status": "confirmed"
+  },
+  {
+    "id": "disc_003",
+    "studentId": "student_001",
+    "type": "violation",
+    "title": "Tidak Rapi Berseragam",
+    "description": "Seragam tidak rapi saat mengikuti pembelajaran",
+    "category": "Kedisiplinan",
+    "date": "2024-12-16",
+    "reportedBy": "Ustadz Fatah",
+    "points": -3,
+    "status": "pending"
+  }
+]

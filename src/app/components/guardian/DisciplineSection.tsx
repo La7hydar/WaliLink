@@ -18,8 +18,8 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarC
 interface DisciplineSectionProps {
   studentData: {
     name: string;
-    violations: number;
-    attendanceRate: number;
+    violations: number | null;
+    attendanceRate: number | null;
   };
   onShowViolationDetail?: () => void;
   onShowWeeklyReports?: () => void;
@@ -87,8 +87,10 @@ export function DisciplineSection({ studentData, onShowViolationDetail, onShowWe
               <AlertTriangle className="h-5 w-5 text-orange-500" />
               <span className="text-sm font-medium">Pelanggaran</span>
             </div>
-            <p className="text-2xl font-bold">{studentData.violations}</p>
-            <p className="text-xs text-muted-foreground">Bulan ini</p>
+            <p className="text-2xl font-bold">{studentData.violations ?? '-'}</p>
+            <p className="text-xs text-muted-foreground">
+              {studentData.violations === null ? 'Data belum tersedia' : 'Bulan ini'}
+            </p>
           </CardContent>
         </Card>
 
@@ -98,8 +100,12 @@ export function DisciplineSection({ studentData, onShowViolationDetail, onShowWe
               <CheckCircle className="h-5 w-5 text-green-500" />
               <span className="text-sm font-medium">Kehadiran</span>
             </div>
-            <p className="text-2xl font-bold">{studentData.attendanceRate}%</p>
-            <p className="text-xs text-muted-foreground">Rata-rata bulanan</p>
+            <p className="text-2xl font-bold">
+              {studentData.attendanceRate === null ? '-' : `${studentData.attendanceRate}%`}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {studentData.attendanceRate === null ? 'Data belum tersedia' : 'Rata-rata bulanan'}
+            </p>
           </CardContent>
         </Card>
       </div>

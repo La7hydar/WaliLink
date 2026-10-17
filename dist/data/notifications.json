@@ -1,0 +1,35 @@
+[
+  {
+    "id": "notif_001",
+    "studentId": "student_001",
+    "title": "Pembayaran SPP",
+    "message": "Pengingat: SPP bulan Januari 2025 akan jatuh tempo dalam 7 hari",
+    "type": "payment",
+    "priority": "medium",
+    "date": "2024-12-19",
+    "isRead": false,
+    "actionUrl": "/payment"
+  },
+  {
+    "id": "notif_002",
+    "studentId": "student_001",
+    "title": "Prestasi Baru!",
+    "message": "Selamat! Ahmad meraih Juara 2 Lomba Tahfidz tingkat kabupaten",
+    "type": "achievement",
+    "priority": "high",
+    "date": "2024-12-18",
+    "isRead": false,
+    "actionUrl": "/achievement"
+  },
+  {
+    "id": "notif_003",
+    "studentId": "student_001",
+    "title": "Pelanggaran Kedisiplinan",
+    "message": "Terlambat mengikuti sholat maghrib berjamaah",
+    "type": "discipline",
+    "priority": "medium",
+    "date": "2024-12-18",
+    "isRead": true,
+    "actionUrl": "/discipline"
+  }
+]
