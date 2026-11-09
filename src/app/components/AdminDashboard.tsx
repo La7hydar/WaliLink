@@ -563,7 +563,6 @@ export function AdminDashboard({ adminData, onLogout, onAccessSection }: AdminDa
                           <Switch
                             checked={granted}
                             onCheckedChange={() => toggleAdminPermission(admin.id, permission as keyof AdminUser['permissions'])}
-                            size="sm"
                           />
                           <span className="text-xs capitalize">{permission}</span>
                         </div>

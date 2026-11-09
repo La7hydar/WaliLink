@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Input } from '../ui/input';
 import { Switch } from '../ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useTheme } from '../ThemeProvider';
@@ -18,9 +17,6 @@ import {
   Bell,
   Lock,
   LogOut,
-  Edit,
-  Save,
-  X,
   Shield,
   Smartphone,
   Globe,
@@ -44,6 +40,9 @@ interface PersonalSectionProps {
     class: string;
     room: string;
     guardian: string;
+    phone: string;
+    email: string;
+    address: string;
     profilePhoto: string;
   };
   onLogout?: () => void;
@@ -51,7 +50,6 @@ interface PersonalSectionProps {
 }
 
 export function PersonalSection({ studentData, onLogout, onShowStudentSettings }: PersonalSectionProps) {
-  const [isEditing, setIsEditing] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const { changeLanguage } = useLanguage();
   const [selectedLanguage, setSelectedLanguage] = useState('id');
@@ -60,13 +58,6 @@ export function PersonalSection({ studentData, onLogout, onShowStudentSettings }
     achievements: true,
     discipline: true,
     shopping: false
-  });
-
-  const [profileData, setProfileData] = useState({
-    guardianName: studentData.guardian,
-    phone: '0812-3456-7890',
-    email: 'demo@walisant.com',
-    address: 'Jl. Sudirman No. 123, Jakarta Pusat'
   });
 
   const handleLanguageChange = (language: string) => {
@@ -91,17 +82,7 @@ export function PersonalSection({ studentData, onLogout, onShowStudentSettings }
         {/* Profile Section */}
         <Card className="mb-4">
           <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Profil Wali</CardTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsEditing(!isEditing)}
-                className="text-green-600 dark:text-green-400"
-              >
-                {isEditing ? <Save className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
-              </Button>
-            </div>
+            <CardTitle className="text-base">Profil Wali</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-start gap-4">
@@ -119,15 +100,7 @@ export function PersonalSection({ studentData, onLogout, onShowStudentSettings }
               <div className="flex-1 space-y-3">
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Nama Wali</label>
-                  {isEditing ? (
-                    <Input
-                      value={profileData.guardianName}
-                      onChange={(e) => setProfileData({...profileData, guardianName: e.target.value})}
-                      className="mt-1"
-                    />
-                  ) : (
-                    <p className="font-medium">{profileData.guardianName}</p>
-                  )}
+                  <p className="font-medium">{studentData.guardian || 'Belum tercatat di database'}</p>
                 </div>
                 
                 <div>
@@ -150,54 +123,30 @@ export function PersonalSection({ studentData, onLogout, onShowStudentSettings }
               <div className="w-8 h-8 bg-blue-100 dark:bg-blue-800 rounded-full flex items-center justify-center">
                 <Phone className="h-4 w-4 text-blue-600 dark:text-blue-300" />
               </div>
-              {isEditing ? (
-                <Input
-                  value={profileData.phone}
-                  onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
-                  placeholder="Nomor Telepon"
-                />
-              ) : (
-                <div>
-                  <p className="font-medium">{profileData.phone}</p>
-                  <p className="text-sm text-muted-foreground">Nomor Telepon</p>
-                </div>
-              )}
+              <div>
+                <p className="font-medium">{studentData.phone || 'Belum tercatat di database'}</p>
+                <p className="text-sm text-muted-foreground">Nomor Telepon</p>
+              </div>
             </div>
             
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center">
                 <Mail className="h-4 w-4 text-green-600 dark:text-green-300" />
               </div>
-              {isEditing ? (
-                <Input
-                  value={profileData.email}
-                  onChange={(e) => setProfileData({...profileData, email: e.target.value})}
-                  placeholder="Email"
-                />
-              ) : (
-                <div>
-                  <p className="font-medium">{profileData.email}</p>
-                  <p className="text-sm text-muted-foreground">Email</p>
-                </div>
-              )}
+              <div>
+                <p className="font-medium">{studentData.email || 'Belum tercatat di database'}</p>
+                <p className="text-sm text-muted-foreground">Email</p>
+              </div>
             </div>
             
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-purple-100 dark:bg-purple-800 rounded-full flex items-center justify-center">
                 <MapPin className="h-4 w-4 text-purple-600 dark:text-purple-300" />
               </div>
-              {isEditing ? (
-                <Input
-                  value={profileData.address}
-                  onChange={(e) => setProfileData({...profileData, address: e.target.value})}
-                  placeholder="Alamat"
-                />
-              ) : (
-                <div>
-                  <p className="font-medium">{profileData.address}</p>
-                  <p className="text-sm text-muted-foreground">Alamat</p>
-                </div>
-              )}
+              <div>
+                <p className="font-medium">{studentData.address || 'Belum tercatat di database'}</p>
+                <p className="text-sm text-muted-foreground">Alamat</p>
+              </div>
             </div>
           </CardContent>
         </Card>

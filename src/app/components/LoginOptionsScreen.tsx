@@ -1,8 +1,16 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { useState } from 'react';
+import {
+  ArrowLeft,
+  ChevronDown,
+  CircleHelp,
+  Languages,
+  LogIn,
+  Plus,
+  ShieldCheck,
+  UserPlus,
+} from 'lucide-react';
 import { Button } from './ui/button';
-import { ArrowLeft, LogIn, UserPlus, Shield, Users, User } from 'lucide-react';
 import { ScrollArea } from './ui/scroll-area';
-import { useLanguage } from '../hooks/useLanguage';
 
 interface LoginOptionsScreenProps {
   serverName: string;
@@ -11,172 +19,170 @@ interface LoginOptionsScreenProps {
   onCreateGuardianAccount: () => void;
   onAdminLogin: () => void;
   onAdminSectionLogin?: () => void;
+  onCreateServer?: () => void;
+  onTutorial?: () => void;
+  onLanguageSettings?: () => void;
 }
 
-export function LoginOptionsScreen({ 
-  serverName, 
-  onBack, 
-  onLogin, 
-  onCreateGuardianAccount, 
+export function LoginOptionsScreen({
+  serverName,
+  onBack,
+  onLogin,
+  onCreateGuardianAccount,
   onAdminLogin,
-  onAdminSectionLogin
+  onAdminSectionLogin,
+  onCreateServer,
+  onTutorial,
+  onLanguageSettings,
 }: LoginOptionsScreenProps) {
-  const { t } = useLanguage();
-  
+  const [showOtherOptions, setShowOtherOptions] = useState(false);
+
   return (
-    <div className="size-full bg-gradient-to-br from-green-50 to-emerald-50 dark:from-gray-900 dark:to-gray-800 safe-area-top safe-area-bottom">
+    <div className="islamic-atmosphere size-full bg-background safe-area-top safe-area-bottom">
       <ScrollArea className="h-full">
-        <div className="p-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="sm" onClick={onBack}>
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-              {t('login.title')}
-            </h1>
-            <p className="text-sm text-gray-600 dark:text-gray-300">
-              {serverName}
+        <div className="mx-auto flex min-h-full w-full max-w-xl flex-col px-5 pb-8 pt-5">
+          <div className="mb-8 flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onBack}
+              aria-label="Kembali ke pilihan pondok atau sekolah"
+              className="rounded-xl"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">
+                WaliLink
+              </p>
+              <h1 className="truncate text-lg font-semibold text-foreground">{serverName}</h1>
+            </div>
+          </div>
+
+          <div className="mb-8 text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500/20 to-amber-400/20 text-emerald-700 ring-1 ring-emerald-500/25 dark:text-emerald-300">
+              <LogIn className="h-7 w-7" />
+            </div>
+            <h2 className="text-2xl font-semibold text-foreground">Selamat datang</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Silakan masuk untuk melihat informasi putra-putri Anda.
             </p>
           </div>
-        </div>
 
-        {/* Server Info Card */}
-        <Card className="border-l-4 border-l-primary bg-primary/5 dark:bg-primary/10">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                <Users className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <p className="font-medium text-gray-900 dark:text-white">
-                  Terhubung ke Server
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  {serverName}
-                </p>
+          <button
+            type="button"
+            onClick={onLogin}
+            className="group mb-4 flex min-h-24 w-full items-center gap-4 rounded-2xl border border-emerald-400/50 bg-gradient-to-r from-emerald-700 to-teal-700 p-5 text-left text-white shadow-[0_12px_36px_rgba(16,185,129,0.2)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_44px_rgba(16,185,129,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2"
+          >
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/25 bg-white/10">
+              <LogIn className="h-6 w-6" />
+            </span>
+            <span className="flex-1">
+              <span className="block text-lg font-semibold">Masuk sebagai Wali Santri</span>
+              <span className="mt-1 block text-sm text-emerald-50/85">
+                Pantau perkembangan dan kebutuhan putra-putri Anda
+              </span>
+            </span>
+            <span aria-hidden="true" className="text-2xl transition-transform group-hover:translate-x-1">›</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onCreateGuardianAccount}
+            className="mb-4 flex min-h-20 w-full items-center gap-4 rounded-2xl border border-emerald-700/25 bg-card/85 p-4 text-left text-foreground shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-500/50 hover:shadow-[0_12px_36px_rgba(16,185,129,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+          >
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500/15 to-amber-400/15 text-emerald-700 ring-1 ring-emerald-500/20 dark:text-emerald-300">
+              <UserPlus className="h-5 w-5" />
+            </span>
+            <span className="flex-1">
+              <span className="block font-semibold">Daftar sebagai Wali Santri</span>
+              <span className="mt-1 block text-sm text-muted-foreground">
+                Untuk wali dengan data santri yang sudah disetujui pondok
+              </span>
+            </span>
+            <span aria-hidden="true" className="text-xl text-emerald-700 dark:text-emerald-300">›</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowOtherOptions((shown) => !shown)}
+            aria-expanded={showOtherOptions}
+            aria-controls="other-login-options"
+            className="flex w-full items-center justify-between rounded-xl border border-border bg-card/80 px-4 py-3 text-sm font-medium text-foreground transition hover:border-emerald-500/40 hover:bg-emerald-500/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+          >
+            <span>Lainnya</span>
+            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${showOtherOptions ? 'rotate-180' : ''}`} />
+          </button>
+
+          {showOtherOptions && (
+            <div id="other-login-options" className="islamic-panel mt-3 space-y-3 rounded-2xl border border-emerald-700/15 bg-card p-4 dark:border-emerald-300/20">
+              <p className="text-sm text-muted-foreground">
+                Pilihan akses untuk pengelola institusi dan bantuan aplikasi.
+              </p>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onAdminLogin}
+                className="h-auto w-full justify-start gap-3 rounded-xl border-amber-500/30 py-3 text-left"
+              >
+                <ShieldCheck className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-300" />
+                <span>
+                  <span className="block font-medium">Portal Administrasi</span>
+                  <span className="block text-xs font-normal text-muted-foreground">Akses khusus pengelola dan administrator institusi</span>
+                </span>
+              </Button>
+
+              {onAdminSectionLogin && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onAdminSectionLogin}
+                  className="h-auto w-full justify-start gap-3 rounded-xl py-3 text-left"
+                >
+                  <ShieldCheck className="h-4 w-4 shrink-0 text-teal-700 dark:text-teal-300" />
+                  <span>
+                    <span className="block font-medium">Login Admin Bagian</span>
+                    <span className="block text-xs font-normal text-muted-foreground">Untuk petugas dengan akses operasional terbatas</span>
+                  </span>
+                </Button>
+              )}
+
+              {onCreateServer && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onCreateServer}
+                  className="h-auto w-full justify-start gap-3 rounded-xl py-3 text-left"
+                >
+                  <Plus className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span>
+                    <span className="block font-medium">Pendaftaran institusi baru</span>
+                    <span className="block text-xs font-normal text-muted-foreground">Ajukan pembuatan layanan untuk pondok atau sekolah</span>
+                  </span>
+                </Button>
+              )}
+
+              <div className="flex flex-wrap gap-2 border-t border-border pt-3">
+                {onTutorial && (
+                  <Button type="button" variant="ghost" size="sm" onClick={onTutorial} className="gap-2">
+                    <CircleHelp className="h-4 w-4" />
+                    Panduan
+                  </Button>
+                )}
+                {onLanguageSettings && (
+                  <Button type="button" variant="ghost" size="sm" onClick={onLanguageSettings} className="gap-2">
+                    <Languages className="h-4 w-4" />
+                    Bahasa
+                  </Button>
+                )}
               </div>
             </div>
-          </CardContent>
-        </Card>
+          )}
 
-        {/* Login Options */}
-        <div className="space-y-4">
-          
-          {/* Existing Guardian Login */}
-          <Card className="hover:shadow-md transition-shadow cursor-pointer border-2 border-transparent hover:border-primary/20">
-            <CardHeader className="pb-3">
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <LogIn className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">{t('login.guardian_login')}</CardTitle>
-                  <CardDescription>
-                    {t('login.guardian_login_desc')}
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <Button 
-                onClick={onLogin}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                {t('login.guardian_login_button')}
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Create Guardian Account */}
-          <Card className="hover:shadow-md transition-shadow cursor-pointer border-2 border-transparent hover:border-green-200 dark:hover:border-green-800">
-            <CardHeader className="pb-3">
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center">
-                  <UserPlus className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">{t('login.create_account')}</CardTitle>
-                  <CardDescription>
-                    {t('login.create_account_desc')}
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="space-y-3">
-                <div className="text-sm text-gray-600 dark:text-gray-400 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                  <p>📝 Persiapkan data:</p>
-                  <ul className="list-disc list-inside mt-1 space-y-1">
-                    <li>Email yang aktif</li>
-                    <li>Nama dan tanggal lahir anak</li>
-                    <li>Password akun</li>
-                  </ul>
-                </div>
-                <Button 
-                  onClick={onCreateGuardianAccount}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white"
-                >
-                  {t('login.create_account_button')}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Admin Login */}
-          <Card className="hover:shadow-md transition-shadow cursor-pointer border-2 border-transparent hover:border-amber-200 dark:hover:border-amber-800">
-            <CardHeader className="pb-3">
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-amber-600 rounded-lg flex items-center justify-center">
-                  <Shield className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">{t('login.admin_login')}</CardTitle>
-                  <CardDescription>
-                    {t('login.admin_login_desc')}
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="space-y-3">
-                <div className="text-sm text-gray-600 dark:text-gray-400 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
-                  <p>🔐 Akses khusus untuk:</p>
-                  <ul className="list-disc list-inside mt-1 space-y-1">
-                    <li>Admin utama (Super Admin)</li>
-                    <li>Admin bagian pondok</li>
-                    <li>Pengelola data santri</li>
-                  </ul>
-                </div>
-                <div className="grid grid-cols-1 gap-2">
-                  <Button 
-                    onClick={onAdminLogin}
-                    className="w-full bg-amber-600 hover:bg-amber-700 text-white"
-                  >
-                    Login Admin Utama
-                  </Button>
-                  {onAdminSectionLogin && (
-                    <Button 
-                      onClick={onAdminSectionLogin}
-                      variant="outline"
-                      className="w-full border-amber-600 text-amber-600 hover:bg-amber-50"
-                    >
-                      Login Admin Bagian
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-          {/* Footer Info */}
-          <div className="text-center">
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Butuh bantuan? Hubungi admin pondok pesantren
-            </p>
-          </div>
+          <p className="mt-auto pt-8 text-center text-xs text-muted-foreground">
+            Dengan masuk, Anda menggunakan layanan institusi yang dipilih.
+          </p>
         </div>
       </ScrollArea>
     </div>

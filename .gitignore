@@ -1,2 +1,12 @@
 .env.local
 .env.*.local
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+node_modules
+node_modules
+node_modules
+node_modules

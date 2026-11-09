@@ -1,38 +1,50 @@
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { ArrowLeft, Calendar, Receipt, Download, Eye } from 'lucide-react';
 import { ScrollArea } from '../ui/scroll-area';
+import { getGuardianPaymentData, type GuardianSppBill } from '../../services/GuardianPortalService';
 
 interface SPPDetailScreenProps {
+  studentId: string;
   onBack: () => void;
   semester: 'current' | 'previous';
   onSemesterChange: (semester: 'current' | 'previous') => void;
 }
 
-export function SPPDetailScreen({ onBack, semester, onSemesterChange }: SPPDetailScreenProps) {
-  const currentSemesterData = [
-    { no: 1, keterangan: 'SPP Januari 2025', jumlahSPP: 500000, jumlahDibayar: 500000, sisaTagihan: 0, status: 'paid', tanggalBayar: '15 Jan 2025' },
-    { no: 2, keterangan: 'SPP Februari 2025', jumlahSPP: 500000, jumlahDibayar: 0, sisaTagihan: 500000, status: 'pending', jatuhTempo: '10 Feb 2025' },
-    { no: 3, keterangan: 'SPP Maret 2025', jumlahSPP: 500000, jumlahDibayar: 0, sisaTagihan: 500000, status: 'pending', jatuhTempo: '10 Mar 2025' },
-    { no: 4, keterangan: 'SPP April 2025', jumlahSPP: 500000, jumlahDibayar: 0, sisaTagihan: 500000, status: 'pending', jatuhTempo: '10 Apr 2025' },
-    { no: 5, keterangan: 'SPP Mei 2025', jumlahSPP: 500000, jumlahDibayar: 0, sisaTagihan: 500000, status: 'pending', jatuhTempo: '10 Mei 2025' },
-    { no: 6, keterangan: 'SPP Juni 2025', jumlahSPP: 500000, jumlahDibayar: 0, sisaTagihan: 500000, status: 'pending', jatuhTempo: '10 Jun 2025' },
-  ];
+export function SPPDetailScreen({ studentId, onBack, semester, onSemesterChange }: SPPDetailScreenProps) {
+  const [bills, setBills] = useState<GuardianSppBill[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
-  const previousSemesterData = [
-    { no: 1, keterangan: 'SPP Juli 2024', jumlahSPP: 450000, jumlahDibayar: 450000, sisaTagihan: 0, status: 'paid', tanggalBayar: '12 Jul 2024' },
-    { no: 2, keterangan: 'SPP Agustus 2024', jumlahSPP: 450000, jumlahDibayar: 450000, sisaTagihan: 0, status: 'paid', tanggalBayar: '15 Agu 2024' },
-    { no: 3, keterangan: 'SPP September 2024', jumlahSPP: 450000, jumlahDibayar: 450000, sisaTagihan: 0, status: 'paid', tanggalBayar: '10 Sep 2024' },
-    { no: 4, keterangan: 'SPP Oktober 2024', jumlahSPP: 450000, jumlahDibayar: 450000, sisaTagihan: 0, status: 'paid', tanggalBayar: '8 Okt 2024' },
-    { no: 5, keterangan: 'SPP November 2024', jumlahSPP: 450000, jumlahDibayar: 450000, sisaTagihan: 0, status: 'paid', tanggalBayar: '10 Nov 2024' },
-    { no: 6, keterangan: 'SPP Desember 2024', jumlahSPP: 450000, jumlahDibayar: 450000, sisaTagihan: 0, status: 'paid', tanggalBayar: '15 Des 2024' },
-  ];
+  useEffect(() => {
+    let isCurrent = true;
+    setIsLoading(true);
+    getGuardianPaymentData(studentId)
+      .then((data) => {
+        if (isCurrent) setBills(data.bills);
+      })
+      .catch((error) => {
+        if (isCurrent) setLoadError(error instanceof Error ? error.message : 'Data SPP gagal dimuat.');
+      })
+      .finally(() => {
+        if (isCurrent) setIsLoading(false);
+      });
+    return () => {
+      isCurrent = false;
+    };
+  }, [studentId]);
 
-  const data = semester === 'current' ? currentSemesterData : previousSemesterData;
-  const totalSPP = data.reduce((sum, item) => sum + item.jumlahSPP, 0);
-  const totalDibayar = data.reduce((sum, item) => sum + item.jumlahDibayar, 0);
-  const totalSisa = data.reduce((sum, item) => sum + item.sisaTagihan, 0);
+  const data = semester === 'current' ? bills.slice(0, 6) : bills.slice(6);
+  const totalSPP = data.reduce((sum, item) => sum + Number(item.amount), 0);
+  const totalDibayar = data.reduce((sum, item) => sum + (item.status.toLowerCase() === 'paid' ? Number(item.amount) : 0), 0);
+  const totalSisa = totalSPP - totalDibayar;
+  const formatBillMonth = (bill: GuardianSppBill) =>
+    new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(new Date(bill.year, bill.month - 1));
+  const formatDate = (value: string | null) => value
+    ? new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(value))
+    : '-';
 
   return (
     <div className="size-full bg-background safe-area-top safe-area-bottom">
@@ -45,7 +57,7 @@ export function SPPDetailScreen({ onBack, semester, onSemesterChange }: SPPDetai
           <div>
             <h1 className="text-xl font-semibold">Detail SPP</h1>
             <p className="text-sm text-muted-foreground">
-              {semester === 'current' ? 'Semester Ganjil 2024/2025' : 'Semester Genap 2023/2024'}
+              {semester === 'current' ? 'Enam tagihan terbaru' : 'Tagihan sebelumnya'}
             </p>
           </div>
         </div>
@@ -59,7 +71,7 @@ export function SPPDetailScreen({ onBack, semester, onSemesterChange }: SPPDetai
             className="flex-1"
           >
             <Calendar className="w-4 h-4 mr-2" />
-            Semester Ini
+            Terbaru
           </Button>
           <Button
             variant={semester === 'previous' ? 'default' : 'outline'}
@@ -68,7 +80,7 @@ export function SPPDetailScreen({ onBack, semester, onSemesterChange }: SPPDetai
             className="flex-1"
           >
             <Receipt className="w-4 h-4 mr-2" />
-            Semester Sebelumnya
+            Sebelumnya
           </Button>
         </div>
 
@@ -109,61 +121,58 @@ export function SPPDetailScreen({ onBack, semester, onSemesterChange }: SPPDetai
           <CardContent>
             <ScrollArea className="h-[400px]">
               <div className="space-y-3">
-                {data.map((item) => (
-                  <div key={item.no} className="border rounded-lg p-3">
+                {isLoading ? <p className="py-6 text-center text-sm text-muted-foreground">Memuat tagihan...</p> : loadError ? (
+                  <p className="py-6 text-center text-sm text-destructive">{loadError}</p>
+                ) : data.length === 0 ? (
+                  <p className="py-6 text-center text-sm text-muted-foreground">Tidak ada tagihan pada periode ini.</p>
+                ) : data.map((item) => {
+                  const isPaid = item.status.toLowerCase() === 'paid';
+                  return <div key={item.id} className="border rounded-lg p-3">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center space-x-2">
                         <span className="w-6 h-6 bg-primary/10 text-primary rounded-full flex items-center justify-center text-xs font-medium">
-                          {item.no}
+                          {item.month}
                         </span>
-                        <span className="font-medium text-sm">{item.keterangan}</span>
+                        <span className="font-medium text-sm">SPP {formatBillMonth(item)}</span>
                       </div>
-                      <Badge variant={item.status === 'paid' ? 'default' : 'destructive'}>
-                        {item.status === 'paid' ? 'Lunas' : 'Belum Bayar'}
+                      <Badge variant={isPaid ? 'default' : 'destructive'}>
+                        {isPaid ? 'Lunas' : item.status}
                       </Badge>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-3 text-xs">
                       <div>
                         <p className="text-muted-foreground mb-1">Jumlah SPP</p>
-                        <p className="font-medium">Rp {item.jumlahSPP.toLocaleString()}</p>
+                        <p className="font-medium">Rp {Number(item.amount).toLocaleString('id-ID')}</p>
                       </div>
                       <div>
                         <p className="text-muted-foreground mb-1">Sudah Dibayar</p>
-                        <p className="font-medium text-green-600">Rp {item.jumlahDibayar.toLocaleString()}</p>
+                        <p className="font-medium text-green-600">Rp {isPaid ? Number(item.amount).toLocaleString('id-ID') : '0'}</p>
                       </div>
                       <div>
                         <p className="text-muted-foreground mb-1">Sisa Tagihan</p>
-                        <p className="font-medium text-red-600">Rp {item.sisaTagihan.toLocaleString()}</p>
+                        <p className="font-medium text-red-600">Rp {isPaid ? '0' : Number(item.amount).toLocaleString('id-ID')}</p>
                       </div>
                       <div>
                         <p className="text-muted-foreground mb-1">
-                          {item.status === 'paid' ? 'Tanggal Bayar' : 'Jatuh Tempo'}
+                          {isPaid ? 'Tanggal Bayar' : 'Status'}
                         </p>
                         <p className="font-medium">
-                          {item.status === 'paid' ? item.tanggalBayar : item.jatuhTempo}
+                          {isPaid ? formatDate(item.payment_date) : item.status}
                         </p>
                       </div>
                     </div>
 
-                    {item.status === 'pending' && (
+                    {isPaid && item.proof_of_payment_url && (
                       <div className="mt-3 pt-3 border-t">
-                        <Button size="sm" className="w-full bg-emerald-600 hover:bg-emerald-700">
-                          Bayar Sekarang
-                        </Button>
-                      </div>
-                    )}
-
-                    {item.status === 'paid' && (
-                      <div className="mt-3 pt-3 border-t">
-                        <Button variant="outline" size="sm" className="w-full">
+                        <a href={item.proof_of_payment_url} target="_blank" rel="noreferrer" className="flex w-full items-center justify-center rounded-md border px-3 py-2 text-sm">
                           <Eye className="w-4 h-4 mr-2" />
                           Lihat Bukti Bayar
-                        </Button>
+                        </a>
                       </div>
                     )}
-                  </div>
-                ))}
+                  </div>;
+                })}
               </div>
             </ScrollArea>
           </CardContent>

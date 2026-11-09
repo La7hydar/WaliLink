@@ -25,7 +25,7 @@ import {
   Home,
   MessageCircle
 } from 'lucide-react';
-import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer } from 'recharts';
+import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, Tooltip } from 'recharts';
 import { PaymentSection } from './guardian/PaymentSection';
 import { AchievementSection } from './guardian/AchievementSection';
 import { AlbumSection } from './guardian/AlbumSection';
@@ -45,7 +45,12 @@ import { ChatSection } from './guardian/ChatSection';
 import { DompetSantriScreen } from './guardian/DompetSantriScreen';
 import { SendAllowanceModal } from './guardian/SendAllowanceModal';
 import { useLanguage } from '../hooks/useLanguage';
-import { getGuardianHomeData, type GuardianHomeChild } from '../services/GuardianHomeService';
+import {
+  getGuardianHomeData,
+  type GuardianHomeChild,
+  type GuardianHomeEvent,
+  type GuardianHomeNotification,
+} from '../services/GuardianHomeService';
 
 interface GuardianAppProps {
   guardianData: {
@@ -69,13 +74,16 @@ const EMPTY_CHILD: ChildData = {
   room: '-',
   birthDate: '',
   status: 'active',
-  notifications: 0,
   violations: null,
+  evaluations: [],
+  attendanceRecords: [],
+  disciplineRecords: [],
   sppStatus: '-',
   attendanceRate: null,
-  emoneyBalance: 0,
+  emoneyBalance: null,
   lastPayment: '',
   recentAchievement: '',
+  recentActivities: [],
   performanceData: [],
 };
 
@@ -95,10 +103,12 @@ export function GuardianApp({ guardianData, onLogout }: GuardianAppProps) {
   const [showStudentSettings, setShowStudentSettings] = useState(false);
   const [sppSemester, setSppSemester] = useState<'current' | 'previous'>('current');
   const [transactionSemester, setTransactionSemester] = useState<'current' | 'previous'>('current');
-  const [currentBalance, setCurrentBalance] = useState(0);
   const { t } = useLanguage();
 
   const [children, setChildren] = useState<ChildData[]>([]);
+  const [notifications, setNotifications] = useState<GuardianHomeNotification[]>([]);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+  const [upcomingEvents, setUpcomingEvents] = useState<GuardianHomeEvent[]>([]);
   const [currentChildId, setCurrentChildId] = useState('');
   const [homeLoading, setHomeLoading] = useState(true);
   const [homeError, setHomeError] = useState('');
@@ -144,11 +154,13 @@ export function GuardianApp({ guardianData, onLogout }: GuardianAppProps) {
     }
 
     getGuardianHomeData(guardianData.authUserId)
-      .then(({ children: guardianChildren }) => {
+      .then(({ children: guardianChildren, notifications: guardianNotifications, unreadNotificationCount: unreadCount, upcomingEvents: events }) => {
         if (!isCurrent) return;
         setChildren(guardianChildren);
         setCurrentChildId(guardianChildren[0]?.id ?? '');
-        setCurrentBalance(guardianChildren[0]?.emoneyBalance ?? 0);
+        setNotifications(guardianNotifications);
+        setUnreadNotificationCount(unreadCount);
+        setUpcomingEvents(events);
       })
       .catch((error) => {
         if (!isCurrent) return;
@@ -172,21 +184,13 @@ export function GuardianApp({ guardianData, onLogout }: GuardianAppProps) {
 
   const handleChildSwitch = (childId: string) => {
     setCurrentChildId(childId);
-    const selectedChild = children.find((child) => child.id === childId);
-    if (selectedChild) setCurrentBalance(selectedChild.emoneyBalance);
   };
 
   const handleTopUp = () => {
     setShowTopUpModal(true);
   };
 
-  const handleTopUpSuccess = (amount: number, method: string) => {
-    setCurrentBalance(prev => prev + amount);
-  };
-
   const handleSendAllowanceSuccess = (amount: number) => {
-    // Dalam implementasi nyata, balance akan di-refresh dari server/localStorage
-    // Di sini cukup tutup modal; DompetSantriScreen akan re-load data
     setShowSendAllowance(false);
   };
 
@@ -256,9 +260,9 @@ export function GuardianApp({ guardianData, onLogout }: GuardianAppProps) {
                 onClick={() => setShowNotifications(true)}
               >
                 <Bell className="h-5 w-5" />
-                {currentChild.notifications > 0 && (
+                {unreadNotificationCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {currentChild.notifications}
+                    {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
                   </span>
                 )}
               </Button>
@@ -280,12 +284,16 @@ export function GuardianApp({ guardianData, onLogout }: GuardianAppProps) {
                   <CreditCard className="h-4 w-4 text-emerald-200" />
                   <span className="text-xs font-medium text-emerald-100">E-Money</span>
                 </div>
-                <p className="text-sm font-bold text-white">Rp {currentBalance.toLocaleString()}</p>
+                <p className="text-sm font-bold text-white">
+                  {currentChild.emoneyBalance === null
+                    ? 'Belum tersedia'
+                    : `Rp ${currentChild.emoneyBalance.toLocaleString('id-ID')}`}
+                </p>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3">
                 <div className="flex items-center justify-center gap-1 mb-1">
                   <CheckCircle className="h-4 w-4 text-emerald-200" />
-                  <span className="text-xs font-medium text-emerald-100">Kehadiran</span>
+                  <span className="text-xs font-medium text-emerald-100">Evaluasi Kehadiran</span>
                 </div>
                 <p className="text-sm font-bold text-white">
                   {currentChild.attendanceRate === null ? '-' : `${currentChild.attendanceRate}%`}
@@ -321,7 +329,7 @@ export function GuardianApp({ guardianData, onLogout }: GuardianAppProps) {
         ) : showNotifications ? (
           <NotificationSection
             onClose={() => setShowNotifications(false)}
-            notificationCount={currentChild.notifications}
+            notifications={notifications}
           />
         ) : selectedSection === 'home' ? (
           <div className="p-4 space-y-4">
@@ -331,22 +339,23 @@ export function GuardianApp({ guardianData, onLogout }: GuardianAppProps) {
                 <CardTitle className="text-base">Rangkuman Analisis</CardTitle>
               </CardHeader>
               <CardContent>
-                {currentChild?.performanceData && currentChild.performanceData.length > 0 ? (
+                {currentChild?.performanceData && currentChild.performanceData.length >= 3 ? (
                   <div className="w-full mb-4" style={{ width: '100%', height: '256px' }}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <RadarChart data={currentChild.performanceData}>
-                        <PolarGrid />
-                        <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10 }} />
+                      <RadarChart data={currentChild.performanceData} outerRadius="72%">
+                        <PolarGrid stroke="var(--border)" />
+                        <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} />
                         <PolarRadiusAxis 
                           angle={90} 
                           domain={[0, 100]} 
-                          tick={{ fontSize: 10 }}
+                          tick={{ fontSize: 9, fill: 'var(--muted-foreground)' }}
                         />
+                        <Tooltip formatter={(value) => [value, 'Skor']} />
                         <Radar
                           name="Performa"
                           dataKey="score"
-                          stroke="#10b981"
-                          fill="#10b981"
+                          stroke="#34d399"
+                          fill="#34d399"
                           fillOpacity={0.2}
                           strokeWidth={2}
                         />
@@ -355,23 +364,16 @@ export function GuardianApp({ guardianData, onLogout }: GuardianAppProps) {
                   </div>
                 ) : (
                   <div className="w-full h-64 flex items-center justify-center text-muted-foreground">
-                    <p>Tidak ada data performa</p>
+                    <p className="max-w-xs px-4 text-center">
+                      {currentChild?.performanceData?.length
+                        ? `Grafik jaring akan tampil setelah tersedia minimal tiga aspek penilaian. Saat ini ada ${currentChild.performanceData.length} aspek dari database.`
+                        : 'Belum ada data evaluasi atau nilai dari database.'}
+                    </p>
                   </div>
                 )}
-                <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                  <div>
-                    <div className="w-3 h-3 bg-emerald-500 rounded-full mx-auto mb-1"></div>
-                    <span className="text-muted-foreground">Baik Sekali</span>
-                  </div>
-                  <div>
-                    <div className="w-3 h-3 bg-yellow-500 rounded-full mx-auto mb-1"></div>
-                    <span className="text-muted-foreground">Baik</span>
-                  </div>
-                  <div>
-                    <div className="w-3 h-3 bg-orange-500 rounded-full mx-auto mb-1"></div>
-                    <span className="text-muted-foreground">Perlu Perbaikan</span>
-                  </div>
-                </div>
+                <p className="text-center text-xs text-muted-foreground">
+                  Skor 0–100 dari evaluasi dan nilai terbaru yang tersedia.
+                </p>
               </CardContent>
             </Card>
 
@@ -393,7 +395,7 @@ export function GuardianApp({ guardianData, onLogout }: GuardianAppProps) {
                   <Button 
                     variant="outline" 
                     className="h-auto py-3 flex flex-col gap-2"
-                    onClick={handleTopUp}
+                    onClick={() => setShowSendAllowance(true)}
                   >
                     <Send className="h-5 w-5 text-blue-600" />
                     <span className="text-sm">Kirim Uang</span>
@@ -418,39 +420,62 @@ export function GuardianApp({ guardianData, onLogout }: GuardianAppProps) {
               </CardContent>
             </Card>
 
-            {/* Recent Activity */}
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base">Aktivitas Terbaru</CardTitle>
+                <CardTitle className="text-base">Aktivitas Santri Terbaru</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {currentChild.recentAchievement && (
-                  <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                    <div className="w-8 h-8 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center">
-                      <Trophy className="h-4 w-4 text-green-600 dark:text-green-300" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">Prestasi Terbaru</p>
-                      <p className="text-xs text-muted-foreground">{currentChild.recentAchievement}</p>
-                    </div>
-                  </div>
-                )}
+                {currentChild.recentActivities.length ? currentChild.recentActivities.map((activity) => {
+                  const ActivityIcon = activity.type === 'achievement'
+                    ? Trophy
+                    : activity.type === 'payment'
+                      ? DollarSign
+                      : activity.type === 'wallet'
+                        ? Wallet
+                        : CheckCircle;
+                  const activityDate = new Date(activity.occurredAt);
+                  const formattedDate = Number.isNaN(activityDate.getTime())
+                    ? ''
+                    : new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' }).format(activityDate);
 
-                {currentChild.lastPayment && (
-                  <div className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                    <div className="w-8 h-8 bg-blue-100 dark:bg-blue-800 rounded-full flex items-center justify-center">
-                      <DollarSign className="h-4 w-4 text-blue-600 dark:text-blue-300" />
+                  return (
+                    <div key={activity.id} className="flex items-center gap-3 rounded-lg border border-border/70 bg-card/70 p-3">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+                        <ActivityIcon className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium">{activity.title}</p>
+                        <p className="truncate text-xs text-muted-foreground">{activity.description}</p>
+                      </div>
+                      <span className="shrink-0 text-xs text-muted-foreground">{formattedDate}</span>
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">Pembayaran SPP</p>
-                      <p className="text-xs text-muted-foreground">Pembayaran terakhir berhasil</p>
-                    </div>
-                    <span className="text-xs text-muted-foreground">{currentChild.lastPayment}</span>
-                  </div>
+                  );
+                }) : (
+                  <p className="text-sm text-muted-foreground">Belum ada aktivitas yang tercatat untuk santri ini.</p>
                 )}
+              </CardContent>
+            </Card>
 
-                {!currentChild.recentAchievement && !currentChild.lastPayment && (
-                  <p className="text-sm text-muted-foreground">Belum ada aktivitas terbaru.</p>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Agenda Pondok</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {upcomingEvents.length ? upcomingEvents.map((event) => (
+                  <div key={event.id} className="flex items-start gap-3 rounded-lg border border-border/70 bg-card/70 p-3">
+                    <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700 dark:text-emerald-300" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium">{event.title}</p>
+                      {event.content && <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{event.content}</p>}
+                    </div>
+                    <span className="shrink-0 text-xs text-muted-foreground">
+                      {event.event_date
+                        ? new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' }).format(new Date(event.event_date))
+                        : ''}
+                    </span>
+                  </div>
+                )) : (
+                  <p className="text-sm text-muted-foreground">Belum ada agenda mendatang yang dicatat pondok.</p>
                 )}
               </CardContent>
             </Card>
@@ -465,6 +490,7 @@ export function GuardianApp({ guardianData, onLogout }: GuardianAppProps) {
           />
         ) : selectedSection === 'payment' && !showSPPDetail && !showTransactionHistory ? (
           <PaymentSection
+            studentId={currentChild.id}
             studentData={{
               name: currentChild.name,
               emoneyBalance: currentChild.emoneyBalance,
@@ -475,15 +501,18 @@ export function GuardianApp({ guardianData, onLogout }: GuardianAppProps) {
             onShowTransactionHistory={() => setShowTransactionHistory(true)}
             onShowDompetSantri={() => setShowDompetSantri(true)}
             onShowTopUp={() => setShowTopUpModal(true)}
+            onShowSendAllowance={() => setShowSendAllowance(true)}
           />
         ) : selectedSection === 'payment' && showSPPDetail ? (
           <SPPDetailScreen 
+            studentId={currentChild.id}
             onBack={() => setShowSPPDetail(false)}
             semester={sppSemester}
             onSemesterChange={setSppSemester}
           />
         ) : selectedSection === 'payment' && showTransactionHistory ? (
           <TransactionHistoryScreen 
+            studentId={currentChild.id}
             onBack={() => setShowTransactionHistory(false)}
             semester={transactionSemester}
             onSemesterChange={setTransactionSemester}
@@ -496,11 +525,13 @@ export function GuardianApp({ guardianData, onLogout }: GuardianAppProps) {
         ) : selectedSection === 'discipline' && showDisciplineProgress ? (
           <DisciplineProgressScreen
             onBack={() => setShowDisciplineProgress(false)}
+            evaluations={currentChild.evaluations}
           />
         ) : selectedSection === 'achievement' ? (
-          <AchievementSection studentData={currentChild} />
+          <AchievementSection studentId={currentChild.id} studentData={currentChild} />
         ) : selectedSection === 'album' && !showEventSchedule ? (
           <AlbumSection 
+            studentId={currentChild.id}
             studentData={currentChild}
             onShowEventSchedule={() => setShowEventSchedule(true)}
           />
@@ -513,6 +544,9 @@ export function GuardianApp({ guardianData, onLogout }: GuardianAppProps) {
               class: currentChild.class,
               room: currentChild.room,
               guardian: guardianData.name,
+              phone: guardianData.phone,
+              email: guardianData.email,
+              address: guardianData.address,
               profilePhoto: guardianData.photo || ''
             }}
             onLogout={onLogout}
@@ -582,8 +616,8 @@ export function GuardianApp({ guardianData, onLogout }: GuardianAppProps) {
       <TopUpBalanceModal
         isOpen={showTopUpModal}
         onClose={() => setShowTopUpModal(false)}
-        currentBalance={currentBalance}
-        onTopUpSuccess={handleTopUpSuccess}
+        currentBalance={currentChild.emoneyBalance}
+        onTopUpSuccess={() => setHomeRefreshToken((token) => token + 1)}
       />
 
       {/* Kirim Uang Saku Modal */}
@@ -592,7 +626,7 @@ export function GuardianApp({ guardianData, onLogout }: GuardianAppProps) {
         onClose={() => setShowSendAllowance(false)}
         studentId={currentChild.id}
         studentName={currentChild.name}
-        currentBalance={currentBalance}
+        currentBalance={currentChild.emoneyBalance}
         onSuccess={handleSendAllowanceSuccess}
       />
     </div>

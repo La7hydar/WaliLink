@@ -51,7 +51,7 @@ interface ServerData {
 }
 
 export default function App() {
-  const [appState, setAppState] = useState<AppState>('welcome');
+  const [appState, setAppState] = useState<AppState>('server-selection');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedServer, setSelectedServer] = useState<ServerData | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -74,11 +74,6 @@ export default function App() {
           return;
         }
 
-        const pendingEmail = await getAuthService().getPendingGuardianRegistrationEmail();
-        if (pendingEmail) {
-          setCurrentUser({ type: 'guardian-registration', email: pendingEmail });
-          setAppState('guardian-signup');
-        }
       } catch (error) {
         console.error('Failed to restore guardian session:', error);
       }
@@ -133,8 +128,6 @@ export default function App() {
       const identifier = credentials.email || credentials.phone || '';
       const guardian = await authService.authenticateGuardian(identifier, credentials.password);
 
-      setIsLoading(false);
-
       if (guardian) {
         setCurrentUser({
           type: 'guardian',
@@ -142,12 +135,13 @@ export default function App() {
         });
         setAppState('guardian-authenticated');
       } else {
-        alert('Login gagal. Periksa kredensial Anda atau gunakan akun demo.');
+        throw new Error('Login gagal. Periksa kredensial Anda.');
       }
     } catch (error) {
-      setIsLoading(false);
       console.error('Authentication error:', error);
-      alert(error instanceof Error ? error.message : 'Login gagal. Terjadi kesalahan sistem.');
+      throw error instanceof Error ? error : new Error('Login gagal. Terjadi kesalahan sistem.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -301,9 +295,6 @@ export default function App() {
         return (
           <ServerSelectionScreen 
             onServerSelected={handleServerSelected}
-            onCreateNewServer={handleCreateNewServer}
-            onTutorial={handleShowTutorial}
-            onLanguageSettings={handleShowLanguageSelection}
           />
         );
       
@@ -324,6 +315,9 @@ export default function App() {
             onCreateGuardianAccount={handleCreateGuardianAccount}
             onAdminLogin={handleAdminLogin}
             onAdminSectionLogin={handleAdminSectionLogin}
+            onCreateServer={handleCreateNewServer}
+            onTutorial={handleShowTutorial}
+            onLanguageSettings={handleShowLanguageSelection}
           />
         );
       
@@ -409,7 +403,11 @@ export default function App() {
         );
       
       default:
-        return <WelcomeScreen onStart={handleStartApp} />;
+        return (
+          <ServerSelectionScreen
+            onServerSelected={handleServerSelected}
+          />
+        );
     }
   };
 

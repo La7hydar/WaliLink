@@ -385,11 +385,17 @@ export const saveEmoneyTransaction = (transaction: EmoneyTransaction): void => {
   saveToStorage(STORAGE_KEYS.EMONEY_TRANSACTIONS, transactions);
   
   // Update balance
-  const currentBalance = getEmoneyBalance(transaction.studentId);
-  const newBalance = transaction.type === 'credit' 
-    ? currentBalance + transaction.amount 
-    : currentBalance - transaction.amount;
-  setEmoneyBalance(transaction.studentId, newBalance);
+  if (transaction.studentId) {
+    const currentBalance = getEmoneyBalance(transaction.studentId);
+    const isCredit = ['topup', 'transfer_in', 'refund'].includes(transaction.type);
+    const isDebit = ['spending', 'transfer_out'].includes(transaction.type);
+    const newBalance = isCredit
+      ? currentBalance + transaction.amount
+      : isDebit
+        ? currentBalance - transaction.amount
+        : currentBalance;
+    setEmoneyBalance(transaction.studentId, newBalance);
+  }
 };
 
 // Attendance Functions
@@ -442,7 +448,7 @@ export const getNotifications = (studentId: string, unreadOnly?: boolean): Notif
   let filtered = notifications.filter(n => n.studentId === studentId);
   
   if (unreadOnly) {
-    filtered = filtered.filter(n => !n.isRead);
+    filtered = filtered.filter(n => !n.read);
   }
   
   return filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -453,7 +459,7 @@ export const markNotificationAsRead = (notificationId: string): void => {
   const notification = notifications.find(n => n.id === notificationId);
   
   if (notification) {
-    notification.isRead = true;
+    notification.read = true;
     saveToStorage(STORAGE_KEYS.NOTIFICATIONS, notifications);
   }
 };

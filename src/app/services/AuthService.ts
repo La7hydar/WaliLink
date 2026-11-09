@@ -54,6 +54,12 @@ export class AuthService {
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) return null;
 
+    if (data.user.app_metadata?.role === 'walilink_demo') {
+      const { error: signOutError } = await supabase.auth.signOut({ scope: 'local' });
+      if (signOutError) throw signOutError;
+      return null;
+    }
+
     const { data: guardian, error: guardianError } = await supabase
       .from('guardians')
       .select('id, full_name, phone_number, address, email')

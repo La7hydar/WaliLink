@@ -1,5 +1,7 @@
 # Arsitektur Data - Aplikasi WaliSantri
 
+> **Status:** sebagian besar dokumen ini menggambarkan rancangan lama LocalDataProvider/REST API generik. Implementasi aktual sekarang hybrid: Auth wali dan Beranda memakai Supabase langsung, sementara banyak fitur lain masih local/mock. Sumber rencana terkini: [Blueprint WaliLink](docs/blueprint/README.md).
+
 ## Overview
 
 Aplikasi WaliSantri menggunakan arsitektur data modular yang memungkinkan perpindahan mudah dari mode offline (local JSON files) ke mode online (remote API server) di masa depan.

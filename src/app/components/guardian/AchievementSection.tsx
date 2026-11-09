@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
@@ -18,26 +18,50 @@ import {
   Dumbbell
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
-import { useAchievements, useAcademicScores, LoadingWrapper } from '../../hooks/useApi';
-import { getCurrentStudentId } from '../../services/mockData';
-import { Achievement } from '../../types/api';
+import {
+  getGuardianAchievementData,
+  type GuardianAchievement,
+  type GuardianAcademicScore,
+  type GuardianEvaluation,
+} from '../../services/GuardianPortalService';
 
 interface AchievementSectionProps {
+  studentId: string;
   studentData: {
     name: string;
     recentAchievement: string;
   };
 }
 
-export function AchievementSection({ studentData }: AchievementSectionProps) {
+export function AchievementSection({ studentId, studentData }: AchievementSectionProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  
-  // Get current student ID
-  const studentId = getCurrentStudentId();
-  
-  // API Hooks
-  const { data: achievements, loading: achievementsLoading, error: achievementsError } = useAchievements(studentId, selectedCategory);
-  const { data: academicScores, loading: scoresLoading } = useAcademicScores(studentId);
+  const [achievements, setAchievements] = useState<GuardianAchievement[]>([]);
+  const [academicScores, setAcademicScores] = useState<GuardianAcademicScore[]>([]);
+  const [evaluations, setEvaluations] = useState<GuardianEvaluation[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+
+  useEffect(() => {
+    let isCurrent = true;
+    setIsLoading(true);
+    setLoadError('');
+    getGuardianAchievementData(studentId)
+      .then((data) => {
+        if (!isCurrent) return;
+        setAchievements(data.achievements);
+        setAcademicScores(data.scores);
+        setEvaluations(data.evaluations);
+      })
+      .catch((error) => {
+        if (isCurrent) setLoadError(error instanceof Error ? error.message : 'Data prestasi gagal dimuat.');
+      })
+      .finally(() => {
+        if (isCurrent) setIsLoading(false);
+      });
+    return () => {
+      isCurrent = false;
+    };
+  }, [studentId]);
 
   // Categories for filtering
   const categories = [
@@ -49,23 +73,41 @@ export function AchievementSection({ studentData }: AchievementSectionProps) {
     { id: 'leadership', label: 'Kepemimpinan', icon: Users }
   ];
 
-  // Generate mock score progress from academic scores
-  const scoreProgress = [
-    { month: 'Sep', score: 82 },
-    { month: 'Okt', score: 85 },
-    { month: 'Nov', score: 83 },
-    { month: 'Des', score: 87 },
-  ];
+  const scoreGroups = new Map<string, { period: string; total: number; count: number }>();
+  academicScores.forEach((item) => {
+    if (item.score === null) return;
+    const key = `${item.academic_year ?? ''}-${item.semester ?? ''}`;
+    const group = scoreGroups.get(key) ?? {
+      period: [item.academic_year, item.semester ? `Semester ${item.semester}` : ''].filter(Boolean).join(' · '),
+      total: 0,
+      count: 0,
+    };
+    group.total += Number(item.score);
+    group.count += 1;
+    scoreGroups.set(key, group);
+  });
+  const scoreProgress = Array.from(scoreGroups.entries())
+    .sort(([first], [second]) => first.localeCompare(second))
+    .map(([, group]) => ({ period: group.period, score: group.total / group.count }));
+  const latestEvaluation = evaluations[0];
+  const radarData = latestEvaluation ? [
+    { aspect: 'Sopan Santun', score: latestEvaluation.manner_score },
+    { aspect: 'Kedisiplinan', score: latestEvaluation.discipline_score },
+    { aspect: 'Kehadiran', score: latestEvaluation.attendance_score },
+    { aspect: 'Kebersihan', score: latestEvaluation.cleanliness_score },
+    { aspect: 'Ibadah', score: latestEvaluation.worship_score },
+    { aspect: 'Keaktifan', score: latestEvaluation.activity_score },
+  ].filter((item): item is { aspect: string; score: number } => item.score !== null) : [];
+  const visibleAchievements = selectedCategory
+    ? achievements.filter((item) => item.category?.toLowerCase() === selectedCategory)
+    : achievements;
+  const latestAchievement = achievements[0];
+  const formatDate = (value: string | null) => value
+    ? new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(value))
+    : '';
 
-  // Data radar untuk kedisiplinan, kehadiran, keaktifan
-  const radarData = [
-    { aspect: 'Kedisiplinan', score: 88, fullMark: 100 },
-    { aspect: 'Kehadiran', score: 95, fullMark: 100 },
-    { aspect: 'Keaktifan', score: 82, fullMark: 100 },
-    { aspect: 'Ibadah', score: 92, fullMark: 100 },
-    { aspect: 'Kebersihan', score: 85, fullMark: 100 },
-    { aspect: 'Sopan Santun', score: 90, fullMark: 100 },
-  ];
+  if (isLoading) return <div className="p-6 text-center text-sm text-muted-foreground">Memuat data prestasi...</div>;
+  if (loadError) return <div className="p-6 text-center text-sm text-destructive">{loadError}</div>;
 
   const getGradeColor = (score: number) => {
     if (score >= 90) return 'text-green-600 bg-green-50 dark:bg-green-900 dark:text-green-300';
@@ -125,8 +167,8 @@ export function AchievementSection({ studentData }: AchievementSectionProps) {
               <span className="text-sm font-medium">Rata-rata</span>
             </div>
             <p className="text-2xl font-bold">
-              {academicScores && academicScores.length > 0 
-                ? (academicScores.reduce((acc, curr) => acc + curr.average, 0) / academicScores.length).toFixed(1)
+              {academicScores.length > 0
+                ? (academicScores.reduce((acc, curr) => acc + Number(curr.score ?? 0), 0) / academicScores.length).toFixed(1)
                 : '0.0'}
             </p>
             <p className="text-xs text-muted-foreground">Nilai ujian</p>
@@ -142,9 +184,9 @@ export function AchievementSection({ studentData }: AchievementSectionProps) {
               <Trophy className="h-6 w-6 text-white" />
             </div>
             <div className="flex-1">
-              <h3 className="font-medium text-emerald-900">Prestasi Terbaru!</h3>
-              <p className="text-sm text-emerald-700">{studentData.recentAchievement}</p>
-              <p className="text-xs text-emerald-600">20 Des 2024</p>
+              <h3 className="font-medium text-emerald-900">{latestAchievement ? 'Prestasi Terbaru' : 'Belum Ada Prestasi'}</h3>
+              <p className="text-sm text-emerald-700">{latestAchievement?.title ?? 'Data prestasi belum tersedia.'}</p>
+              {latestAchievement?.date_achieved && <p className="text-xs text-emerald-600">{formatDate(latestAchievement.date_achieved)}</p>}
             </div>
           </div>
         </CardContent>
@@ -153,15 +195,15 @@ export function AchievementSection({ studentData }: AchievementSectionProps) {
       {/* Academic Performance Chart */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Perkembangan Nilai (4 Bulan Terakhir)</CardTitle>
+          <CardTitle className="text-base">Perkembangan Nilai</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="h-48 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={scoreProgress}>
+              {scoreProgress.length > 0 ? <LineChart data={scoreProgress}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                <YAxis domain={[70, 100]} tick={{ fontSize: 12 }} />
+                <XAxis dataKey="period" tick={{ fontSize: 12 }} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
                 <Line 
                   type="monotone" 
                   dataKey="score" 
@@ -169,7 +211,7 @@ export function AchievementSection({ studentData }: AchievementSectionProps) {
                   strokeWidth={3}
                   name="Rata-rata Nilai"
                 />
-              </LineChart>
+              </LineChart> : <p className="flex h-full items-center justify-center text-sm text-muted-foreground">Belum ada data nilai.</p>}
             </ResponsiveContainer>
           </div>
         </CardContent>
@@ -183,7 +225,7 @@ export function AchievementSection({ studentData }: AchievementSectionProps) {
         <CardContent>
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <RadarChart data={radarData}>
+              {radarData.length > 0 ? <RadarChart data={radarData}>
                 <PolarGrid />
                 <PolarAngleAxis dataKey="aspect" tick={{ fontSize: 10 }} />
                 <PolarRadiusAxis 
@@ -199,7 +241,7 @@ export function AchievementSection({ studentData }: AchievementSectionProps) {
                   fillOpacity={0.2}
                   strokeWidth={2}
                 />
-              </RadarChart>
+              </RadarChart> : <p className="flex h-full items-center justify-center text-sm text-muted-foreground">Belum ada evaluasi siswa.</p>}
             </ResponsiveContainer>
           </div>
           
@@ -227,32 +269,22 @@ export function AchievementSection({ studentData }: AchievementSectionProps) {
       {/* Detailed Exam Scores */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Nilai Ujian Lengkap</CardTitle>
+              <CardTitle className="text-base">Nilai Akademik</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {academicScores && academicScores.length > 0 ? academicScores.map((subject, index) => (
-            <div key={index} className="border rounded-lg p-3">
+          {academicScores.length > 0 ? academicScores.map((subject) => (
+            <div key={subject.id} className="border rounded-lg p-3">
               <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium text-sm">{subject.subject}</h4>
-                <Badge className={getGradeColor(subject.average)}>
-                  {getGradeLetter(subject.average)}
+                <h4 className="font-medium text-sm">{subject.subject_name}</h4>
+                <Badge className={getGradeColor(Number(subject.score ?? 0))}>
+                  {getGradeLetter(Number(subject.score ?? 0))}
                 </Badge>
               </div>
-              <div className="grid grid-cols-3 gap-4 text-center text-sm">
-                <div>
-                  <p className="text-muted-foreground text-xs">UTS</p>
-                  <p className="font-medium">{subject.mid}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-xs">UAS</p>
-                  <p className="font-medium">{subject.final}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-xs">Rata-rata</p>
-                  <p className="font-medium text-green-600">{subject.average}</p>
-                </div>
+              <div className="flex items-center justify-between text-sm">
+                <p className="text-xs text-muted-foreground">{[subject.academic_year, subject.semester ? `Semester ${subject.semester}` : ''].filter(Boolean).join(' · ')}</p>
+                <p className="font-medium text-green-600">{subject.score ?? '-'}</p>
               </div>
-              <Progress value={subject.average} className="h-2 mt-2" />
+              <Progress value={Number(subject.score ?? 0)} className="h-2 mt-2" />
             </div>
           )) : (
             <div className="text-center py-8 text-muted-foreground">
@@ -269,11 +301,12 @@ export function AchievementSection({ studentData }: AchievementSectionProps) {
           <CardTitle className="text-base">Daftar Prestasi</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {achievements && achievements.length > 0 ? achievements.map((achievement, index) => {
-            const Icon = getCategoryIcon(achievement.category);
-            const categoryColor = getCategoryColor(achievement.category);
+          {visibleAchievements.length > 0 ? visibleAchievements.map((achievement) => {
+            const category = achievement.category ?? '';
+            const Icon = getCategoryIcon(category);
+            const categoryColor = getCategoryColor(category);
             return (
-              <div key={index} className="border rounded-lg p-4">
+              <div key={achievement.id} className="border rounded-lg p-4">
                 <div className="flex items-start gap-3">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center ${categoryColor}`}>
                     <Icon className="h-5 w-5" />
@@ -281,15 +314,12 @@ export function AchievementSection({ studentData }: AchievementSectionProps) {
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-1">
                       <h4 className="font-medium text-sm">{achievement.title}</h4>
-                      <span className="text-xs text-muted-foreground">{achievement.date}</span>
+                      <span className="text-xs text-muted-foreground">{formatDate(achievement.date_achieved)}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground mb-2">{achievement.description}</p>
+                    {achievement.description && <p className="text-xs text-muted-foreground mb-2">{achievement.description}</p>}
                     <div className="flex items-center gap-2">
                       <Badge variant="outline" className="text-xs">
-                        {achievement.category}
-                      </Badge>
-                      <Badge variant="secondary" className="text-xs">
-                        {achievement.level}
+                        {category || 'Lainnya'}
                       </Badge>
                     </div>
                   </div>

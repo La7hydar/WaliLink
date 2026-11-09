@@ -1,295 +1,232 @@
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { CheckCircle, TrendingUp } from 'lucide-react';
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import type {
+  GuardianHomeAttendance,
+  GuardianHomeDisciplineRecord,
+  GuardianHomeEvaluation,
+} from '../../services/GuardianHomeService';
 import { Badge } from '../ui/badge';
-import { Progress } from '../ui/progress';
 import { Button } from '../ui/button';
-import { 
-  AlertTriangle, 
-  CheckCircle, 
-  Clock, 
-  TrendingUp, 
-  Calendar,
-  Eye,
-  FileText,
-  Target,
-  Activity
-} from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 
 interface DisciplineSectionProps {
   studentData: {
     name: string;
-    violations: number | null;
-    attendanceRate: number | null;
+    evaluations: GuardianHomeEvaluation[];
+    attendanceRecords: GuardianHomeAttendance[];
+    disciplineRecords: GuardianHomeDisciplineRecord[];
   };
-  onShowViolationDetail?: () => void;
-  onShowWeeklyReports?: () => void;
   onShowDisciplineProgress?: () => void;
 }
 
-export function DisciplineSection({ studentData, onShowViolationDetail, onShowWeeklyReports, onShowDisciplineProgress }: DisciplineSectionProps) {
-  const disciplineData = [
-    { week: 'Minggu 1', violations: 0, attendance: 100 },
-    { week: 'Minggu 2', violations: 1, attendance: 95 },
-    { week: 'Minggu 3', violations: 0, attendance: 98 },
-    { week: 'Minggu 4', violations: 2, attendance: 92 },
-  ];
+const aspects: Array<{ key: keyof GuardianHomeEvaluation; label: string }> = [
+  { key: 'manner_score', label: 'Adab' },
+  { key: 'discipline_score', label: 'Disiplin' },
+  { key: 'attendance_score', label: 'Kehadiran' },
+  { key: 'cleanliness_score', label: 'Kebersihan' },
+  { key: 'worship_score', label: 'Ibadah' },
+  { key: 'activity_score', label: 'Aktivitas' },
+];
 
-  const attendanceData = [
-    { month: 'Sep', hadir: 22, sakit: 1, izin: 0, alpha: 0 },
-    { month: 'Okt', hadir: 24, sakit: 0, izin: 1, alpha: 0 },
-    { month: 'Nov', hadir: 21, sakit: 2, izin: 1, alpha: 1 },
-    { month: 'Des', hadir: 20, sakit: 1, izin: 0, alpha: 0 },
-  ];
+const formatDate = (value: string) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(date);
+};
 
-  const recentViolations = [
-    {
-      date: '20 Des 2024',
-      type: 'Terlambat Sholat',
-      description: 'Terlambat 5 menit untuk sholat maghrib',
-      punishment: 'Membersihkan masjid',
-      status: 'completed'
-    },
-    {
-      date: '18 Des 2024',
-      type: 'Tidak Rapi',
-      description: 'Seragam tidak rapi saat upacara',
-      punishment: 'Menulis surat pernyataan',
-      status: 'completed'
-    },
-  ];
+const attendanceLabels: Record<GuardianHomeAttendance['status'], string> = {
+  present: 'Hadir',
+  late: 'Terlambat',
+  permission: 'Izin',
+  sick: 'Sakit',
+  absent: 'Alpa',
+};
 
-  const weeklyReports = [
-    {
-      week: 'Minggu ke-4 Desember',
-      date: '23-29 Des 2024',
-      behavior: 85,
-      activity: 90,
-      discipline: 80,
-      notes: 'Ahmad menunjukkan peningkatan dalam kedisiplinan. Perlu lebih konsisten dalam ketepatan waktu sholat.'
-    },
-    {
-      week: 'Minggu ke-3 Desember',
-      date: '16-22 Des 2024',
-      behavior: 88,
-      activity: 85,
-      discipline: 75,
-      notes: 'Partisipasi dalam kegiatan pondok sangat baik. Ada beberapa pelanggaran kecil terkait kedisiplinan.'
-    },
-  ];
+const severityLabels: Record<GuardianHomeDisciplineRecord['severity'], string> = {
+  minor: 'Ringan',
+  moderate: 'Sedang',
+  serious: 'Berat',
+};
+
+const formatTime = (value: string | null) => {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? null
+    : new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit' }).format(date);
+};
+
+export function DisciplineSection({ studentData, onShowDisciplineProgress }: DisciplineSectionProps) {
+  const evaluations = studentData.evaluations;
+  const attendanceRecords = studentData.attendanceRecords;
+  const disciplineRecords = studentData.disciplineRecords;
+  const latest = evaluations[0];
+  const chartData = [...evaluations].reverse().map((evaluation, index) => ({
+    period: evaluation.period || formatDate(evaluation.created_at) || `Evaluasi ${index + 1}`,
+    discipline: evaluation.discipline_score,
+    attendance: evaluation.attendance_score,
+  }));
+  const scores = latest
+    ? aspects.flatMap(({ key, label }) => {
+        const score = latest[key];
+        return typeof score === 'number' && Number.isFinite(score) ? [{ label, score }] : [];
+      })
+    : [];
 
   return (
-    <div className="p-4 space-y-4">
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <AlertTriangle className="h-5 w-5 text-orange-500" />
-              <span className="text-sm font-medium">Pelanggaran</span>
-            </div>
-            <p className="text-2xl font-bold">{studentData.violations ?? '-'}</p>
-            <p className="text-xs text-muted-foreground">
-              {studentData.violations === null ? 'Data belum tersedia' : 'Bulan ini'}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <CheckCircle className="h-5 w-5 text-green-500" />
-              <span className="text-sm font-medium">Kehadiran</span>
-            </div>
-            <p className="text-2xl font-bold">
-              {studentData.attendanceRate === null ? '-' : `${studentData.attendanceRate}%`}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {studentData.attendanceRate === null ? 'Data belum tersedia' : 'Rata-rata bulanan'}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Weekly Discipline Chart */}
+    <div className="space-y-4 p-4">
       <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base">Perkembangan Kedisiplinan</CardTitle>
-            {onShowDisciplineProgress && (
-              <Button variant="ghost" size="sm" onClick={onShowDisciplineProgress}>
-                <TrendingUp className="h-4 w-4 mr-1" />
-                Lihat Detail
-              </Button>
-            )}
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+          <div>
+            <CardTitle className="text-base">Evaluasi Kedisiplinan</CardTitle>
+            <p className="mt-1 text-sm text-muted-foreground">{studentData.name}</p>
           </div>
+          {onShowDisciplineProgress && (
+            <Button variant="outline" size="sm" onClick={onShowDisciplineProgress}>
+              <TrendingUp className="mr-1 h-4 w-4" />
+              Detail
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
-          <div className="h-48 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={disciplineData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="week" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Line 
-                  type="monotone" 
-                  dataKey="violations" 
-                  stroke="#ef4444" 
-                  strokeWidth={2}
-                  name="Pelanggaran"
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="attendance" 
-                  stroke="#22c55e" 
-                  strokeWidth={2}
-                  name="Kehadiran (%)"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Attendance Detail */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Detail Kehadiran (4 Bulan Terakhir)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-48 w-full mb-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={attendanceData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Bar dataKey="hadir" fill="#22c55e" name="Hadir" />
-                <Bar dataKey="sakit" fill="#f59e0b" name="Sakit" />
-                <Bar dataKey="izin" fill="#3b82f6" name="Izin" />
-                <Bar dataKey="alpha" fill="#ef4444" name="Alpha" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-          
-          {/* Legend */}
-          <div className="grid grid-cols-4 gap-2 text-center">
-            <div className="flex flex-col items-center">
-              <div className="w-4 h-4 bg-green-500 rounded mb-1"></div>
-              <span className="text-xs">Hadir</span>
-            </div>
-            <div className="flex flex-col items-center">
-              <div className="w-4 h-4 bg-yellow-500 rounded mb-1"></div>
-              <span className="text-xs">Sakit</span>
-            </div>
-            <div className="flex flex-col items-center">
-              <div className="w-4 h-4 bg-blue-500 rounded mb-1"></div>
-              <span className="text-xs">Izin</span>
-            </div>
-            <div className="flex flex-col items-center">
-              <div className="w-4 h-4 bg-red-500 rounded mb-1"></div>
-              <span className="text-xs">Alpha</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Recent Violations */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base">Pelanggaran Terbaru</CardTitle>
-            {onShowViolationDetail && (
-              <Button variant="ghost" size="sm" onClick={onShowViolationDetail}>
-                <Eye className="h-4 w-4 mr-1" />
-                Lihat Semua
-              </Button>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {recentViolations.length > 0 ? (
-            recentViolations.map((violation, index) => (
-              <div key={index} className="border rounded-lg p-3">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge variant="destructive" className="text-xs">
-                        {violation.type}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">{violation.date}</span>
-                    </div>
-                    <p className="text-sm">{violation.description}</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      <strong>Hukuman:</strong> {violation.punishment}
-                    </p>
+          {scores.length ? (
+            <>
+              <p className="mb-3 text-xs text-muted-foreground">
+                Skor evaluasi terbaru{latest?.period ? ` · ${latest.period}` : latest ? ` · ${formatDate(latest.created_at)}` : ''}
+              </p>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {scores.map(({ label, score }) => (
+                  <div key={label} className="rounded-xl border border-border/70 bg-card/70 p-3">
+                    <p className="text-xs text-muted-foreground">{label}</p>
+                    <p className="mt-1 text-xl font-semibold">{score}</p>
+                    <p className="text-xs text-muted-foreground">dari 100</p>
                   </div>
-                  <Badge variant={violation.status === 'completed' ? 'default' : 'secondary'}>
-                    {violation.status === 'completed' ? 'Selesai' : 'Berjalan'}
-                  </Badge>
-                </div>
+                ))}
               </div>
-            ))
+            </>
           ) : (
-            <div className="text-center py-4">
-              <CheckCircle className="h-8 w-8 text-green-500 mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">Tidak ada pelanggaran bulan ini</p>
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              Belum ada evaluasi kedisiplinan untuk santri ini di database.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Presensi Harian</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {attendanceRecords.length ? (
+            <div className="space-y-3">
+              {attendanceRecords.slice(0, 7).map((record) => {
+                const checkIn = formatTime(record.check_in_at);
+                const checkOut = formatTime(record.check_out_at);
+                return (
+                  <div key={record.id} className="flex items-start justify-between gap-3 border-b border-border/70 pb-3 last:border-0 last:pb-0">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">{formatDate(record.attendance_date)}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {[checkIn && `Masuk ${checkIn}`, checkOut && `Pulang ${checkOut}`, record.note]
+                          .filter(Boolean)
+                          .join(' · ') || 'Tidak ada catatan tambahan'}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 flex-col items-end gap-1">
+                      <Badge variant={record.status === 'absent' ? 'destructive' : 'secondary'}>
+                        {attendanceLabels[record.status]}
+                      </Badge>
+                      {record.is_demo && <Badge variant="outline">SIMULASI</Badge>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              Belum ada presensi harian untuk santri ini di database.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Catatan Pelanggaran</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {disciplineRecords.length ? (
+            <div className="space-y-3">
+              {disciplineRecords.slice(0, 10).map((record) => (
+                <div key={record.id} className="space-y-2 border-b border-border/70 pb-3 last:border-0 last:pb-0">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="font-medium text-sm">{record.category}</p>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={record.resolution_status === 'resolved' ? 'secondary' : 'destructive'}>
+                        {record.resolution_status === 'resolved' ? 'Ditindaklanjuti' : 'Perlu tindak lanjut'}
+                      </Badge>
+                      {record.is_demo && <Badge variant="outline">SIMULASI</Badge>}
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{record.description}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatDate(record.occurred_at)} · Poin: {record.points} · Tingkat: {severityLabels[record.severity]}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              Belum ada catatan pelanggaran untuk santri ini di database.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Riwayat Evaluasi</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {chartData.length >= 2 ? (
+            <div className="h-56 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                  <XAxis dataKey="period" tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} />
+                  <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="discipline" name="Disiplin" stroke="#34d399" connectNulls />
+                  <Line type="monotone" dataKey="attendance" name="Kehadiran" stroke="#fbbf24" connectNulls />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              Grafik tren akan muncul setelah tersedia minimal dua evaluasi di database.
+            </p>
+          )}
+          {evaluations.length > 0 && (
+            <div className="mt-4 space-y-2">
+              {evaluations.map((evaluation) => (
+                <div key={evaluation.id} className="flex items-center justify-between gap-3 border-t border-border/70 pt-3 text-sm">
+                  <span>{evaluation.period || formatDate(evaluation.created_at) || 'Evaluasi'}</span>
+                  <span className="text-muted-foreground">
+                    Disiplin: {evaluation.discipline_score ?? '-'} · Kehadiran: {evaluation.attendance_score ?? '-'}
+                  </span>
+                </div>
+              ))}
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Weekly Reports */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base">Laporan Mingguan</CardTitle>
-            {onShowWeeklyReports && (
-              <Button variant="ghost" size="sm" onClick={onShowWeeklyReports}>
-                <FileText className="h-4 w-4 mr-1" />
-                Lihat Semua
-              </Button>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {weeklyReports.map((report, index) => (
-            <div key={index} className="border rounded-lg p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h4 className="font-medium text-sm">{report.week}</h4>
-                  <p className="text-xs text-muted-foreground">{report.date}</p>
-                </div>
-                <FileText className="h-5 w-5 text-muted-foreground" />
-              </div>
-              
-              <div className="space-y-2 mb-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Perilaku</span>
-                  <span className="text-sm font-medium">{report.behavior}%</span>
-                </div>
-                <Progress value={report.behavior} className="h-2" />
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Keaktifan</span>
-                  <span className="text-sm font-medium">{report.activity}%</span>
-                </div>
-                <Progress value={report.activity} className="h-2" />
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Kedisiplinan</span>
-                  <span className="text-sm font-medium">{report.discipline}%</span>
-                </div>
-                <Progress value={report.discipline} className="h-2" />
-              </div>
-              
-              <div className="bg-gray-50 rounded p-3">
-                <p className="text-sm text-muted-foreground">
-                  <strong>Catatan:</strong> {report.notes}
-                </p>
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+      {latest && scores.length === 0 && (
+        <p className="flex items-center gap-2 text-xs text-muted-foreground">
+          <CheckCircle className="h-4 w-4" />
+          Data evaluasi berasal dari database pondok.
+        </p>
+      )}
     </div>
   );
 }

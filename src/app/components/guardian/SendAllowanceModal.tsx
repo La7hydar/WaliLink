@@ -6,14 +6,13 @@ import { Label } from '../ui/label';
 import { Card, CardContent } from '../ui/card';
 import { Send, CheckCircle2, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
-import { getPaymentService } from '../../services/PaymentService';
 
 interface SendAllowanceModalProps {
   isOpen: boolean;
   onClose: () => void;
   studentId: string;
   studentName: string;
-  currentBalance: number;
+  currentBalance: number | null;
   onSuccess: (amount: number) => void;
 }
 
@@ -50,25 +49,15 @@ export function SendAllowanceModal({
       toast.error('Minimum kirim Rp 5.000');
       return;
     }
+    if (currentBalance === null) {
+      toast.error('Dompet santri belum tersedia di database.');
+      return;
+    }
     if (parsedAmount > currentBalance) {
       toast.error('Saldo tidak mencukupi');
       return;
     }
-    setIsProcessing(true);
-    try {
-      const svc = getPaymentService();
-      await svc.sendAllowance(
-        studentId,
-        parsedAmount,
-        note || `Uang Saku untuk ${studentName}`
-      );
-      setIsDone(true);
-      onSuccess(parsedAmount);
-    } catch (e) {
-      toast.error('Gagal mengirim uang saku');
-    } finally {
-      setIsProcessing(false);
-    }
+    toast.error('Pengiriman uang saku belum tersedia. Transaksi belum dicatat ke database.');
   };
 
   const handleClose = () => {
@@ -112,7 +101,7 @@ export function SendAllowanceModal({
                   <span className="text-xs text-green-700 dark:text-green-300">Saldo Dompet</span>
                 </div>
                 <span className="font-bold text-sm text-green-800 dark:text-green-200">
-                  {formatRp(currentBalance)}
+                  {currentBalance === null ? 'Belum tersedia' : formatRp(currentBalance)}
                 </span>
               </CardContent>
             </Card>
@@ -177,7 +166,7 @@ export function SendAllowanceModal({
               </Button>
               <Button
                 onClick={handleSend}
-                disabled={parsedAmount < 5000 || isProcessing}
+                disabled={parsedAmount < 5000 || currentBalance === null || isProcessing}
                 className="flex-1 bg-green-600 hover:bg-green-700"
               >
                 {isProcessing ? (

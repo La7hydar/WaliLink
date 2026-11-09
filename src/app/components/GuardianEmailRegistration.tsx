@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Mail, UserRound } from 'lucide-react';
+import { ArrowLeft, ClipboardCheck, Mail, UserRound } from 'lucide-react';
 import { getAuthService } from '../services/AuthService';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
@@ -16,14 +16,15 @@ interface GuardianEmailRegistrationProps {
 export function GuardianEmailRegistration({
   onBack,
   onAccountCreated,
-  initialEmail = 'haidarahnaf137@gmail.com',
+  initialEmail = '',
   emailConfirmed: initialEmailConfirmed = false,
 }: GuardianEmailRegistrationProps) {
+  const [showRegistrationForm, setShowRegistrationForm] = useState(false);
   const [email, setEmail] = useState(initialEmail);
-  const [childName, setChildName] = useState('Haidar Ahnaf');
-  const [childBirthDate, setChildBirthDate] = useState('2010-04-12');
-  const [password, setPassword] = useState('demo123');
-  const [confirmPassword, setConfirmPassword] = useState('demo123');
+  const [childName, setChildName] = useState('');
+  const [childBirthDate, setChildBirthDate] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [emailConfirmed, setEmailConfirmed] = useState(initialEmailConfirmed);
   const [waitingForConfirmation, setWaitingForConfirmation] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
@@ -96,8 +97,60 @@ export function GuardianEmailRegistration({
 
   const passwordsMatch = password.length >= 6 && password === confirmPassword;
 
+  if (!showRegistrationForm) {
+    return (
+      <div className="islamic-atmosphere size-full overflow-y-auto bg-background p-5 safe-area-top safe-area-bottom">
+        <div className="mx-auto flex min-h-full max-w-lg flex-col justify-center gap-5">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={onBack} aria-label="Kembali">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-xl font-semibold">Sebelum membuat akun wali</h1>
+              <p className="text-sm text-muted-foreground">Pastikan data santri sudah terdaftar dan disetujui pondok.</p>
+            </div>
+          </div>
+
+          <Card className="islamic-panel border-emerald-700/20 dark:border-emerald-300/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ClipboardCheck className="h-5 w-5 text-emerald-700 dark:text-emerald-300" />
+                Alur pendaftaran wali
+              </CardTitle>
+              <CardDescription>
+                Akun WaliLink ditautkan hanya ke data santri dan wali yang telah diperiksa pondok.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <ol className="list-decimal space-y-3 pl-5 text-sm text-foreground">
+                <li>
+                  Daftarkan santri melalui admin pondok secara langsung atau melalui website resmi pondok.
+                </li>
+                <li>
+                  Admin Data akan memeriksa informasi pendaftaran, menyetujui data, lalu mencatatnya di database pondok.
+                </li>
+                <li>
+                  Setelah disetujui, buat akun di sini menggunakan email wali yang tercatat serta nama lengkap dan tanggal lahir anak sesuai data pondok.
+                </li>
+              </ol>
+              <p className="rounded-xl border border-amber-500/25 bg-amber-500/5 p-3 text-xs text-muted-foreground">
+                WaliLink belum menerima permohonan pendaftaran santri melalui aplikasi ini. Jika data belum terdaftar atau tidak cocok, hubungi admin pondok; jangan gunakan data anak lain.
+              </p>
+              <Button className="w-full" onClick={() => setShowRegistrationForm(true)}>
+                Data santri sudah disetujui, lanjut daftar akun
+              </Button>
+              <Button variant="outline" className="w-full" onClick={onBack}>
+                Belum terdaftar, kembali
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="size-full overflow-y-auto bg-gradient-to-br from-green-50 to-emerald-50 p-5 safe-area-top safe-area-bottom dark:from-gray-900 dark:to-gray-800">
+    <div className="islamic-atmosphere size-full overflow-y-auto bg-background p-5 safe-area-top safe-area-bottom">
       <div className="mx-auto flex min-h-full max-w-lg flex-col justify-center gap-5">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={onBack} aria-label="Kembali">
@@ -205,10 +258,6 @@ export function GuardianEmailRegistration({
                   </div>
                 </>
               )}
-              <p className="rounded-md bg-muted p-3 text-xs text-muted-foreground">
-                Data demo: wali Ahnaf Haidar, anak Haidar Ahnaf. Tanggal lahir masih dummy.
-                Password uji yang disarankan: demo123.
-              </p>
               {emailConfirmed && (
                 <p className="rounded-md bg-emerald-50 p-3 text-xs text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-200">
                   Email terverifikasi. Lanjutkan pencocokan data untuk mengaktifkan akun.

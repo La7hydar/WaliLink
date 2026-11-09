@@ -70,7 +70,7 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
   
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-br from-emerald-50 to-emerald-100 overflow-hidden">
+    <div className="flex flex-col h-full bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-gray-950 dark:to-gray-900 overflow-hidden">
       {/* Status Bar Space — respects device notch/status bar */}
       <div
         className="flex items-center justify-center"
@@ -90,13 +90,13 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
               className="h-15 w-15 object-contain rounded-2xl" 
             />
           </div>
-          <h1 className="text-2xl font-bold text-emerald-900 mb-2">
+          <h1 className="text-2xl font-bold text-emerald-900 dark:text-emerald-100 mb-2">
             WaliLink
           </h1>
-          <p className="text-emerald-600 text-sm">
+          <p className="text-emerald-600 dark:text-emerald-300 text-sm">
             Pantau perkembangan putra-putri Anda di pondok pesantren
           </p>
-          <div className="mt-3 flex items-center justify-center gap-2 text-xs text-emerald-700">
+          <div className="mt-3 flex items-center justify-center gap-2 text-xs text-emerald-700 dark:text-emerald-200">
             {isSupabaseConfigured ? <BookOpen className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
             <span>{isSupabaseConfigured ? 'Login wali & Beranda: Supabase' : 'Mode Offline - Data Lokal'}</span>
           </div>
@@ -137,7 +137,7 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
                   key={index}
                   onClick={() => setCurrentImageIndex(index)}
                   className={`w-2 h-2 rounded-full transition-colors ${
-                    index === currentImageIndex ? 'bg-emerald-600' : 'bg-emerald-300'
+                    index === currentImageIndex ? 'bg-emerald-600' : 'bg-emerald-300 dark:bg-emerald-800'
                   }`}
                 />
               ))}
@@ -155,7 +155,7 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
             Mulai Aplikasi
           </Button>
           
-          <p className="text-xs text-emerald-600 text-center pt-2">
+          <p className="text-xs text-emerald-600 dark:text-emerald-300 text-center pt-2">
             {isSupabaseConfigured
               ? 'Login wali dan Beranda memakai Supabase; fitur lainnya masih menggunakan data lokal.'
               : 'Aplikasi berjalan offline. Data demo tersimpan di perangkat lokal.'}

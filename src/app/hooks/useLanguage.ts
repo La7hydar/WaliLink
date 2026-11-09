@@ -5,6 +5,7 @@ type Language = 'id' | 'en' | 'ar';
 interface LanguageContextType {
   language: Language;
   setLanguage: (language: Language) => void;
+  changeLanguage: (language: string) => void;
   t: (key: string) => string;
 }
 
@@ -297,9 +298,17 @@ export function useLanguageSetup() {
     window.localStorage.setItem('app-language', newLanguage);
   };
 
+  const changeLanguage = (newLanguage: string) => {
+    if (newLanguage !== 'id' && newLanguage !== 'en' && newLanguage !== 'ar') {
+      throw new Error(`Unsupported language: ${newLanguage}`);
+    }
+
+    setLanguage(newLanguage);
+  };
+
   const t = (key: string): string => {
     return translations[language][key] || key;
   };
 
-  return { language, setLanguage, t };
+  return { language, setLanguage, changeLanguage, t };
 }

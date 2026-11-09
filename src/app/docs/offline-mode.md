@@ -1,5 +1,7 @@
 # Mode Offline - Dokumentasi
 
+> **Catatan historis:** panduan ini mendeskripsikan prototype offline lama. Runtime saat ini hybrid: login wali dan Beranda menggunakan Supabase, sementara sebagian modul lain masih lokal/mock. Lihat [Blueprint WaliLink](../../../docs/blueprint/README.md) untuk status/rencana terkini.
+
 ## Ringkasan
 
 Aplikasi WaliSantri telah diubah untuk berjalan sepenuhnya secara **offline**. Semua data disimpan di **local storage** browser dan tidak ada koneksi ke server atau layanan eksternal.

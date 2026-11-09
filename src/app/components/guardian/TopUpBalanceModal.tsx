@@ -26,7 +26,7 @@ import { OfflinePaymentWarning } from '../OfflineModeIndicator';
 interface TopUpBalanceModalProps {
   isOpen: boolean;
   onClose: () => void;
-  currentBalance: number;
+  currentBalance: number | null;
   onTopUpSuccess: (amount: number, method: string) => void;
 }
 
@@ -161,7 +161,7 @@ export function TopUpBalanceModal({
       toast.error('Minimum top up Rp 10.000');
       return;
     }
-    setStep('method');
+    toast.error('Top up belum terhubung ke payment gateway. Saldo belum berubah.');
   };
 
   const handleSelectMethod = (methodId: string) => {
@@ -177,15 +177,7 @@ export function TopUpBalanceModal({
   };
 
   const handleConfirmPayment = () => {
-    setStep('processing');
-    
-    // Simulate payment processing
-    setTimeout(() => {
-      onTopUpSuccess(parseInt(amount), selectedMethod);
-      toast.success('Top up berhasil! Saldo akan segera masuk.');
-      onClose();
-      resetForm();
-    }, 2000);
+    toast.error('Top up belum terhubung ke payment gateway. Saldo belum berubah.');
   };
 
   const resetForm = () => {
@@ -236,7 +228,7 @@ export function TopUpBalanceModal({
                     Saldo Saat Ini
                   </p>
                   <p className="text-2xl font-bold text-green-900 dark:text-green-100">
-                    {formatCurrency(currentBalance)}
+                    {currentBalance === null ? 'Dompet belum tersedia' : formatCurrency(currentBalance)}
                   </p>
                 </CardContent>
               </Card>

@@ -168,7 +168,9 @@ export function ChildSelectorModal({
                   return (
                     <motion.div
                       key={child.id}
-                      ref={(el) => (cardRefs.current[child.id] = el)}
+                      ref={(el) => {
+                        cardRefs.current[child.id] = el;
+                      }}
                       layout
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{

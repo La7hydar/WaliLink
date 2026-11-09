@@ -2,13 +2,13 @@
 
 :root {
   --font-size: 14px;
-  --background: #ffffff;
+  --background: #fbfdfb;
   --foreground: #1f2937;
   --card: #ffffff;
   --card-foreground: #1f2937;
   --popover: #ffffff;
   --popover-foreground: #1f2937;
-  --primary: #dc2626;
+  --primary: #047857;
   --primary-foreground: #ffffff;
   --secondary: #f3f4f6;
   --secondary-foreground: #1f2937;
@@ -24,7 +24,7 @@
   --switch-background: #d1d5db;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --ring: #dc2626;
+  --ring: #059669;
   --chart-1: #16a34a;
   --chart-2: #dc2626;
   --chart-3: #eab308;
@@ -42,36 +42,36 @@
   --green-dark: #166534;
   --sidebar: #ffffff;
   --sidebar-foreground: #1f2937;
-  --sidebar-primary: #dc2626;
+  --sidebar-primary: #047857;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #f3f4f6;
   --sidebar-accent-foreground: #1f2937;
   --sidebar-border: #e5e7eb;
-  --sidebar-ring: #dc2626;
+  --sidebar-ring: #059669;
 }
 
 .dark {
-  --background: #111827;
-  --foreground: #f9fafb;
-  --card: #1f2937;
+  --background: #0b1c18;
+  --foreground: #f1f7f3;
+  --card: #122a23;
   --card-foreground: #f9fafb;
-  --popover: #1f2937;
+  --popover: #16332a;
   --popover-foreground: #f9fafb;
-  --primary: #ef4444;
-  --primary-foreground: #ffffff;
-  --secondary: #374151;
+  --primary: #34d399;
+  --primary-foreground: #06251d;
+  --secondary: #1b3a30;
   --secondary-foreground: #f9fafb;
-  --muted: #374151;
-  --muted-foreground: #9ca3af;
-  --accent: #374151;
+  --muted: #19372e;
+  --muted-foreground: #a7bbb0;
+  --accent: #1d4034;
   --accent-foreground: #f9fafb;
   --destructive: #dc2626;
   --destructive-foreground: #f9fafb;
-  --border: #374151;
-  --input: #374151;
-  --input-background: #374151;
-  --switch-background: #4b5563;
-  --ring: #ef4444;
+  --border: #285143;
+  --input: #19372e;
+  --input-background: #19372e;
+  --switch-background: #436455;
+  --ring: #34d399;
   --chart-1: #22c55e;
   --chart-2: #ef4444;
   --chart-3: #fbbf24;
@@ -86,14 +86,14 @@
   --green: #22c55e;
   --green-light: #052e16;
   --green-dark: #86efac;
-  --sidebar: #1f2937;
-  --sidebar-foreground: #f9fafb;
-  --sidebar-primary: #ef4444;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #374151;
+  --sidebar: #122a23;
+  --sidebar-foreground: #f1f7f3;
+  --sidebar-primary: #34d399;
+  --sidebar-primary-foreground: #06251d;
+  --sidebar-accent: #1d4034;
   --sidebar-accent-foreground: #f9fafb;
-  --sidebar-border: #374151;
-  --sidebar-ring: #ef4444;
+  --sidebar-border: #285143;
+  --sidebar-ring: #34d399;
 }
 
 @theme inline {
@@ -145,6 +145,22 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.islamic-atmosphere {
+  background-image:
+    radial-gradient(ellipse at 12% 8%, rgb(16 185 129 / 10%), transparent 36%),
+    radial-gradient(ellipse at 92% 84%, rgb(217 169 73 / 9%), transparent 34%);
+}
+
+.dark .islamic-atmosphere {
+  background-image:
+    radial-gradient(ellipse at 12% 8%, rgb(16 185 129 / 14%), transparent 38%),
+    radial-gradient(ellipse at 92% 84%, rgb(217 169 73 / 10%), transparent 36%);
+}
+
+.islamic-panel {
+  background-image: linear-gradient(145deg, rgb(16 185 129 / 3%), transparent 45%, rgb(217 169 73 / 3%));
 }
 
 /**

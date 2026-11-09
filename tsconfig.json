@@ -18,5 +18,6 @@
       "@/*": ["./src/app/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["src/app/supabase/functions/server"]
 }

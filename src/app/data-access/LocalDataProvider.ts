@@ -136,14 +136,14 @@ export class LocalDataProvider implements IDataProvider {
         this.loadJsonFile('students.json'),
         this.loadJsonFile('guardians.json'),
         this.loadJsonFile('admins.json'),
-        this.loadJsonFile('payments.json'),
-        this.loadJsonFile('achievements.json'),
-        this.loadJsonFile('academic-scores.json'),
-        this.loadJsonFile('discipline.json'),
-        this.loadJsonFile('attendance.json'),
-        this.loadJsonFile('emoney-transactions.json'),
-        this.loadJsonFile('album-photos.json'),
-        this.loadJsonFile('notifications.json'),
+        this.loadJsonFile<Payment>('payments.json'),
+        this.loadJsonFile<Achievement>('achievements.json'),
+        this.loadJsonFile<AcademicScore>('academic-scores.json'),
+        this.loadJsonFile<DisciplineRecord>('discipline.json'),
+        this.loadJsonFile<AttendanceRecord>('attendance.json'),
+        this.loadJsonFile<EmoneyTransaction>('emoney-transactions.json'),
+        this.loadJsonFile<AlbumPhoto>('album-photos.json'),
+        this.loadJsonFile<Notification>('notifications.json'),
         this.loadJsonFile('virtual-accounts.json'),
       ]);
 
@@ -375,9 +375,9 @@ export class LocalDataProvider implements IDataProvider {
     // Calculate balance from transactions
     let balance = 0;
     transactions.forEach(t => {
-      if (t.type === 'topup' || t.type === 'credit') {
+      if (['topup', 'transfer_in', 'refund'].includes(t.type)) {
         balance += t.amount;
-      } else if (t.type === 'spending' || t.type === 'debit') {
+      } else if (['spending', 'transfer_out'].includes(t.type)) {
         balance -= t.amount;
       }
     });
@@ -417,7 +417,7 @@ export class LocalDataProvider implements IDataProvider {
     await this.ensureInitialized();
     let filtered = this.cache!.notifications.filter(n => n.studentId === studentId);
     if (unreadOnly) {
-      filtered = filtered.filter(n => !n.isRead);
+      filtered = filtered.filter(n => !n.read);
     }
     return filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }
@@ -432,7 +432,7 @@ export class LocalDataProvider implements IDataProvider {
     await this.ensureInitialized();
     const notification = this.cache!.notifications.find(n => n.id === notificationId);
     if (notification) {
-      notification.isRead = true;
+      notification.read = true;
       this.syncToLocalStorage();
     }
   }

@@ -25,17 +25,12 @@ interface ThemeProviderProps {
 
 export function ThemeProvider({ 
   children, 
-  defaultTheme = 'light' 
+  defaultTheme = 'dark'
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(defaultTheme);
-
-  useEffect(() => {
-    // Load theme from localStorage
-    const savedTheme = window.localStorage.getItem('pesantren-app-theme') as Theme;
-    if (savedTheme) {
-      setTheme(savedTheme);
-    }
-  }, []);
+  const [theme, setTheme] = useState<Theme>(() => {
+    const savedTheme = window.localStorage.getItem('pesantren-app-theme');
+    return savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : defaultTheme;
+  });
 
   useEffect(() => {
     // Apply theme to document

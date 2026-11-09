@@ -81,6 +81,7 @@ export interface IDataProvider {
 
   // Virtual Account operations
   getVirtualAccount(studentId: string): Promise<any | null>;
+  getVirtualAccounts?(studentId: string): Promise<any[]>;
 }
 
 // Response type untuk API calls

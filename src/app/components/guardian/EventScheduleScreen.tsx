@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
@@ -22,6 +22,7 @@ import {
   List,
   Grid
 } from 'lucide-react';
+import { getGuardianEvents, type GuardianNewsEvent } from '../../services/GuardianPortalService';
 
 interface EventScheduleScreenProps {
   onBack: () => void;
@@ -30,9 +31,28 @@ interface EventScheduleScreenProps {
 export function EventScheduleScreen({ onBack }: EventScheduleScreenProps) {
   const [selectedMonth, setSelectedMonth] = useState('all');
   const [viewMode, setViewMode] = useState<'poster' | 'table'>('poster');
+  const [eventRecords, setEventRecords] = useState<GuardianNewsEvent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
-  // Jadwal acara lengkap semester
-  const events = [
+  useEffect(() => {
+    let isCurrent = true;
+    getGuardianEvents()
+      .then((data) => {
+        if (isCurrent) setEventRecords(data);
+      })
+      .catch((error) => {
+        if (isCurrent) setLoadError(error instanceof Error ? error.message : 'Jadwal acara gagal dimuat.');
+      })
+      .finally(() => {
+        if (isCurrent) setIsLoading(false);
+      });
+    return () => {
+      isCurrent = false;
+    };
+  }, []);
+
+  const eventExamples = [
     // Januari 2025
     {
       id: 1,
@@ -341,35 +361,41 @@ export function EventScheduleScreen({ onBack }: EventScheduleScreenProps) {
     }
   ];
 
-  const categories = [
-    { id: 'religious', label: 'Keagamaan', icon: BookOpen, color: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' },
-    { id: 'academic', label: 'Akademik', icon: Award, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' },
-    { id: 'sports', label: 'Olahraga', icon: Dumbbell, color: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300' },
-    { id: 'art', label: 'Seni', icon: Music, color: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' },
-    { id: 'social', label: 'Sosial', icon: Heart, color: 'bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300' },
-    { id: 'health', label: 'Kesehatan', icon: Users, color: 'bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300' },
-    { id: 'competition', label: 'Lomba', icon: Award, color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' },
-    { id: 'educational', label: 'Edukatif', icon: Globe, color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' },
-    { id: 'holiday', label: 'Libur', icon: Sparkles, color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' }
-  ];
-
-  const getCategoryData = (categoryId: string) => {
-    return categories.find(cat => cat.id === categoryId) || categories[0];
-  };
-
-  const filteredEvents = selectedMonth === 'all' 
-    ? events 
-    : events.filter(e => e.month === selectedMonth);
-
+  const events = eventRecords.map((record) => {
+    const dateValue = record.event_date ?? record.created_at;
+    const date = dateValue ? new Date(dateValue) : null;
+    return {
+      id: record.id,
+      title: record.title,
+      dateValue,
+      date: date ? new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(date) : '-',
+      time: record.event_date && date ? new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit' }).format(date) : '',
+      description: record.content ?? '',
+      poster: record.image_url ?? '',
+      month: date ? String(date.getMonth()) : '',
+    };
+  });
+  const getCategoryData = () => ({
+    label: 'Agenda',
+    icon: Calendar,
+    color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300',
+  });
+  const filteredEvents = selectedMonth === 'all'
+    ? events
+    : events.filter((event) => event.month === selectedMonth);
   const months = [
     { id: 'all', label: 'Semua' },
-    { id: 'jan', label: 'Januari' },
-    { id: 'feb', label: 'Februari' },
-    { id: 'mar', label: 'Maret' },
-    { id: 'apr', label: 'April' },
-    { id: 'may', label: 'Mei' },
-    { id: 'jun', label: 'Juni' }
+    ...Array.from(new Set(events.map((event) => event.month).filter(Boolean)))
+      .sort((first, second) => Number(first) - Number(second))
+      .map((month) => ({
+        id: month,
+        label: new Intl.DateTimeFormat('id-ID', { month: 'long' }).format(new Date(2000, Number(month))),
+      })),
   ];
+  const upcomingCount = events.filter((event) => event.dateValue && new Date(event.dateValue) >= new Date()).length;
+
+  if (isLoading) return <div className="p-6 text-center text-sm text-muted-foreground">Memuat jadwal acara...</div>;
+  if (loadError) return <div className="p-6 text-center text-sm text-destructive">{loadError}</div>;
 
   return (
     <div className="h-full bg-gray-50 dark:bg-gray-900">
@@ -381,10 +407,10 @@ export function EventScheduleScreen({ onBack }: EventScheduleScreenProps) {
           </Button>
           <div className="flex-1">
             <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Jadwal Acara Semester
+              Jadwal Acara
             </h1>
             <p className="text-sm text-gray-600 dark:text-gray-300">
-              Januari - Juni 2025 (Semester Genap)
+              Data kegiatan pesantren
             </p>
           </div>
           <div className="flex border rounded-lg p-1">
@@ -413,14 +439,14 @@ export function EventScheduleScreen({ onBack }: EventScheduleScreenProps) {
         <div className="grid grid-cols-3 gap-3 mb-4">
           <Card>
             <CardContent className="p-3 text-center">
-              <p className="text-xl font-bold text-green-600">{events.filter(e => e.category === 'religious').length}</p>
-              <p className="text-xs text-muted-foreground">Keagamaan</p>
+              <p className="text-xl font-bold text-green-600">{upcomingCount}</p>
+              <p className="text-xs text-muted-foreground">Mendatang</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-3 text-center">
-              <p className="text-xl font-bold text-blue-600">{events.filter(e => e.category === 'academic').length}</p>
-              <p className="text-xs text-muted-foreground">Akademik</p>
+              <p className="text-xl font-bold text-blue-600">{events.length - upcomingCount}</p>
+              <p className="text-xs text-muted-foreground">Terlaksana / lainnya</p>
             </CardContent>
           </Card>
           <Card>
@@ -458,7 +484,7 @@ export function EventScheduleScreen({ onBack }: EventScheduleScreenProps) {
               <ScrollArea className="w-full whitespace-nowrap pb-4">
                 <div className="flex gap-4">
                   {filteredEvents.map((event) => {
-                    const categoryData = getCategoryData(event.category);
+                    const categoryData = getCategoryData();
                     const Icon = categoryData.icon;
                     
                     return (
@@ -491,19 +517,15 @@ export function EventScheduleScreen({ onBack }: EventScheduleScreenProps) {
                                 <Calendar className="w-3 h-3" />
                                 <span className="text-xs">{event.date}</span>
                               </div>
-                              <div className="flex items-center gap-2 text-sm">
+                              {event.time && <div className="flex items-center gap-2 text-sm">
                                 <Clock className="w-3 h-3" />
                                 <span className="text-xs">{event.time}</span>
-                              </div>
+                              </div>}
                             </div>
                           </div>
                           
                           {/* Additional Info */}
                           <CardContent className="p-3">
-                            <div className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
-                              <MapPin className="w-3 h-3" />
-                              <span className="line-clamp-1">{event.location}</span>
-                            </div>
                             <p className="text-xs line-clamp-2">{event.description}</p>
                           </CardContent>
                         </Card>
@@ -519,7 +541,7 @@ export function EventScheduleScreen({ onBack }: EventScheduleScreenProps) {
           {viewMode === 'table' && (
             <>
               {filteredEvents.map((event) => {
-                const categoryData = getCategoryData(event.category);
+                const categoryData = getCategoryData();
                 const Icon = categoryData.icon;
                 
                 return (
@@ -543,18 +565,10 @@ export function EventScheduleScreen({ onBack }: EventScheduleScreenProps) {
                           <Calendar className="w-4 h-4" />
                           <span>{event.date}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-muted-foreground">
+                        {event.time && <div className="flex items-center gap-2 text-muted-foreground">
                           <Clock className="w-4 h-4" />
                           <span>{event.time}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <MapPin className="w-4 h-4" />
-                          <span>{event.location}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Users className="w-4 h-4" />
-                          <span>{event.participants}</span>
-                        </div>
+                        </div>}
                       </div>
                       
                       <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">

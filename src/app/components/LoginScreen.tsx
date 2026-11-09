@@ -17,12 +17,15 @@ import {
 import { Alert, AlertDescription } from './ui/alert';
 
 interface LoginScreenProps {
-  onLogin: (credentials: { phone?: string; email?: string; password: string }) => void;
+  onLogin: (credentials: { phone?: string; email?: string; password: string }) => void | Promise<void>;
   onBack: () => void;
   isSignUp?: boolean;
   title?: string;
   isAdmin?: boolean;
 }
+
+const DEMO_GUARDIAN_EMAIL = 'demo.walilink@example.com';
+const DEMO_GUARDIAN_PASSWORD = 'Demo-WaliLink-2026!';
 
 export function LoginScreen({ onLogin, onBack, isSignUp = false, title, isAdmin = false }: LoginScreenProps) {
   const [showPassword, setShowPassword] = useState(false);
@@ -39,16 +42,19 @@ export function LoginScreen({ onLogin, onBack, isSignUp = false, title, isAdmin 
     }
 
     setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      onLogin({
+    setError('');
+
+    try {
+      await onLogin({
         phone: isAdmin && loginMethod === 'phone' ? phoneNumber : undefined,
         email: loginMethod === 'email' ? email : undefined,
         password
       });
+    } catch (loginError) {
+      setError(loginError instanceof Error ? loginError.message : 'Login gagal. Terjadi kesalahan sistem.');
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   const formatPhoneNumber = (value: string) => {
@@ -154,7 +160,11 @@ export function LoginScreen({ onLogin, onBack, isSignUp = false, title, isAdmin 
                       type="email"
                       placeholder="nama@email.com"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      autoComplete="username"
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setError('');
+                      }}
                       className="pl-10"
                     />
                   </div>
@@ -169,7 +179,11 @@ export function LoginScreen({ onLogin, onBack, isSignUp = false, title, isAdmin 
                       type={showPassword ? 'text' : 'password'}
                       placeholder="Masukkan password"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      autoComplete="current-password"
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        setError('');
+                      }}
                       className="pr-10"
                     />
                     <Button
@@ -203,6 +217,13 @@ export function LoginScreen({ onLogin, onBack, isSignUp = false, title, isAdmin 
                   )}
                 </Button>
 
+                {error && (
+                  <Alert variant="destructive" role="alert">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+
                 {!isSignUp && (
                   <div className="text-center">
                     <Button variant="link" className="text-emerald-600 text-sm">
@@ -215,18 +236,18 @@ export function LoginScreen({ onLogin, onBack, isSignUp = false, title, isAdmin 
           </CardContent>
         </Card>
 
-        {/* Show local admin demo credentials; guardian accounts use Supabase Auth. */}
+        {/* Demo credentials only access synthetic rows linked to the dedicated demo guardian. */}
         {!isSignUp && (
-          <Card className="mt-4 border-emerald-200 bg-emerald-50">
+          <Card className="mt-4 border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950/40">
             <CardContent className="p-4">
               <div className="flex items-start gap-2">
                 <AlertCircle className="h-4 w-4 text-emerald-600 mt-0.5 flex-shrink-0" />
                 <div>
                   {isAdmin ? (
                     <>
-                      <p className="text-sm font-medium text-emerald-800 mb-1">Demo Login Admin</p>
-                      <p className="text-xs text-emerald-700 mb-2">Gunakan kredensial lokal:</p>
-                      <div className="space-y-1 text-xs text-emerald-600">
+                      <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200 mb-1">Demo Login Admin</p>
+                      <p className="text-xs text-emerald-700 dark:text-emerald-300 mb-2">Gunakan kredensial lokal:</p>
+                      <div className="space-y-1 text-xs text-emerald-600 dark:text-emerald-300">
                         <p><strong>Email:</strong> admin@almunawwarah.com</p>
                         <p><strong>HP:</strong> 0812-1111-2222</p>
                         <p><strong>Password:</strong> admin123</p>
@@ -234,10 +255,27 @@ export function LoginScreen({ onLogin, onBack, isSignUp = false, title, isAdmin 
                     </>
                   ) : (
                     <>
-                      <p className="text-sm font-medium text-emerald-800 mb-1">Login Wali</p>
-                      <p className="text-xs text-emerald-700">
-                        Gunakan akun Supabase Auth yang sudah ditautkan ke data wali oleh administrator.
+                      <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200 mb-1">Akun Demo Wali (Supabase)</p>
+                      <p className="text-xs text-emerald-700 dark:text-emerald-300 mb-2">
+                        Akun publik untuk mencoba aplikasi. Hanya terhubung ke data santri contoh, bukan data keluarga nyata.
                       </p>
+                      <div className="space-y-1 text-xs text-emerald-700 dark:text-emerald-300">
+                        <p><strong>Email:</strong> {DEMO_GUARDIAN_EMAIL}</p>
+                        <p><strong>Password:</strong> {DEMO_GUARDIAN_PASSWORD}</p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mt-3 border-emerald-300 dark:border-emerald-700"
+                        onClick={() => {
+                          setEmail(DEMO_GUARDIAN_EMAIL);
+                          setPassword(DEMO_GUARDIAN_PASSWORD);
+                          setError('');
+                        }}
+                      >
+                        Isi akun demo
+                      </Button>
                     </>
                   )}
                 </div>

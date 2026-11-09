@@ -37,7 +37,7 @@ export const config = {
   // UI Configuration
   ui: {
     theme: {
-      defaultTheme: 'light',
+      defaultTheme: 'dark',
       enableDarkMode: true,
     },
     language: {

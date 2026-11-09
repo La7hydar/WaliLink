@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
@@ -17,20 +17,55 @@ import {
   MessageCircle,
   Clock,
   Eye,
-  MapPin
 } from 'lucide-react';
+import { getGuardianAlbumData, type GuardianAlbumItem, type GuardianNewsEvent } from '../../services/GuardianPortalService';
 
 interface AlbumSectionProps {
+  studentId: string;
   studentData: {
     name: string;
   };
   onShowEventSchedule?: () => void;
 }
 
-export function AlbumSection({ studentData, onShowEventSchedule }: AlbumSectionProps) {
+export function AlbumSection({ studentId, studentData, onShowEventSchedule }: AlbumSectionProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [personalAlbums, setPersonalAlbums] = useState<GuardianAlbumItem[]>([]);
+  const [sharedAlbums, setSharedAlbums] = useState<GuardianAlbumItem[]>([]);
+  const [events, setEvents] = useState<GuardianNewsEvent[]>([]);
+  const [eventsError, setEventsError] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
-  const personalPhotos = [
+  useEffect(() => {
+    let isCurrent = true;
+    setIsLoading(true);
+    setLoadError('');
+    getGuardianAlbumData(studentId)
+      .then((data) => {
+        if (!isCurrent) return;
+        setPersonalAlbums(data.personalAlbums);
+        setSharedAlbums(data.sharedAlbums);
+        setEvents(data.events);
+        setEventsError(data.eventsError);
+      })
+      .catch((error) => {
+        if (isCurrent) setLoadError(error instanceof Error ? error.message : 'Data album gagal dimuat.');
+      })
+      .finally(() => {
+        if (isCurrent) setIsLoading(false);
+      });
+    return () => {
+      isCurrent = false;
+    };
+  }, [studentId]);
+
+  const formatDate = (value: string | null) => value
+    && !Number.isNaN(new Date(value).getTime())
+    ? new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(value))
+    : '-';
+
+  const personalPhotoExamples = [
     {
       id: 1,
       url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
@@ -75,7 +110,7 @@ export function AlbumSection({ studentData, onShowEventSchedule }: AlbumSectionP
     }
   ];
 
-  const schoolEvents = [
+  const schoolEventExamples = [
     {
       id: 1,
       title: 'Peringatan Maulid Nabi',
@@ -102,7 +137,7 @@ export function AlbumSection({ studentData, onShowEventSchedule }: AlbumSectionP
     }
   ];
 
-  const upcomingEvents = [
+  const upcomingEventExamples = [
     {
       title: 'Wisuda Santri',
       date: '5 Jan 2025',
@@ -129,7 +164,7 @@ export function AlbumSection({ studentData, onShowEventSchedule }: AlbumSectionP
     }
   ];
 
-  const newsArticles = [
+  const newsArticleExamples = [
     {
       id: 1,
       title: 'Santri Pondok Al-Munawwarah Raih Juara Umum Kompetisi Tahfidz Tingkat Nasional',
@@ -182,12 +217,46 @@ export function AlbumSection({ studentData, onShowEventSchedule }: AlbumSectionP
     }
   ];
 
+  const personalPhotos = personalAlbums.filter((album) => album.media_url).map((album) => ({
+    id: album.id,
+    url: album.media_url ?? '',
+    title: album.title,
+    date: formatDate(album.created_at),
+  }));
+  const schoolEvents = sharedAlbums.filter((album) => album.media_url).map((album) => ({
+    id: album.id,
+    title: album.title,
+    date: formatDate(album.created_at),
+    type: album.type,
+    thumbnail: album.media_url ?? '',
+  }));
+  const upcomingEvents = events.filter((event) =>
+    event.event_date && new Date(event.event_date).getTime() >= Date.now(),
+  ).map((event) => ({
+    id: event.id,
+    title: event.title,
+    date: formatDate(event.event_date),
+    description: event.content ?? '',
+    poster: event.image_url ?? '',
+  }));
+  const newsArticles = events.map((event) => ({
+    id: event.id,
+    title: event.title,
+    date: formatDate(event.created_at),
+    thumbnail: event.image_url ?? '',
+    excerpt: event.content ?? '',
+  }));
+
+  if (isLoading) return <div className="p-6 text-center text-sm text-muted-foreground">Memuat album dan berita...</div>;
+  if (loadError) return <div className="p-6 text-center text-sm text-destructive">{loadError}</div>;
+
   return (
     <div className="p-4">
       <Tabs defaultValue="personal" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="personal">Album Personal</TabsTrigger>
           <TabsTrigger value="school">Album Umum</TabsTrigger>
+          <TabsTrigger value="events">Agenda</TabsTrigger>
           <TabsTrigger value="news">Berita Terbaru</TabsTrigger>
         </TabsList>
 
@@ -202,7 +271,7 @@ export function AlbumSection({ studentData, onShowEventSchedule }: AlbumSectionP
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-3">
-                {personalPhotos.map((photo) => (
+                {personalPhotos.length === 0 ? <p className="col-span-2 py-8 text-center text-sm text-muted-foreground">Belum ada foto siswa.</p> : personalPhotos.map((photo) => (
                   <div 
                     key={photo.id} 
                     className="relative group cursor-pointer"
@@ -235,7 +304,7 @@ export function AlbumSection({ studentData, onShowEventSchedule }: AlbumSectionP
               <CardTitle className="text-base">Dokumentasi Kegiatan Pondok</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {schoolEvents.map((event) => (
+              {schoolEvents.length === 0 ? <p className="py-8 text-center text-sm text-muted-foreground">Belum ada album umum.</p> : schoolEvents.map((event) => (
                 <div key={event.id} className="border rounded-lg p-4">
                   <div className="flex gap-3">
                     <div className="w-20 h-20 overflow-hidden rounded-lg flex-shrink-0">
@@ -248,22 +317,10 @@ export function AlbumSection({ studentData, onShowEventSchedule }: AlbumSectionP
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-2">
                         <h4 className="font-medium text-sm">{event.title}</h4>
-                        <Badge variant="outline" className="text-xs">
-                          {event.photos} foto
-                        </Badge>
+                        {event.type && <Badge variant="outline" className="text-xs">{event.type}</Badge>}
                       </div>
-                      <p className="text-xs text-muted-foreground mb-2">{event.description}</p>
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-muted-foreground">{event.date}</span>
-                        <div className="flex gap-1">
-                          <Button size="sm" variant="ghost" className="h-8 px-2">
-                            <ImageIcon className="h-3 w-3 mr-1" />
-                            Lihat
-                          </Button>
-                          <Button size="sm" variant="ghost" className="h-8 px-2">
-                            <Download className="h-3 w-3" />
-                          </Button>
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -288,11 +345,12 @@ export function AlbumSection({ studentData, onShowEventSchedule }: AlbumSectionP
               </div>
             </CardHeader>
             <CardContent>
+              {eventsError && <p className="mb-3 text-sm text-muted-foreground">Agenda belum dapat dibaca dari database. Periksa kebijakan akses Supabase.</p>}
               {/* Horizontal Poster Scroll */}
               <ScrollArea className="w-full whitespace-nowrap pb-4">
                 <div className="flex gap-4">
-                  {upcomingEvents.map((event, index) => (
-                    <div key={index} className="inline-block w-56 flex-shrink-0">
+                  {upcomingEvents.map((event) => (
+                    <div key={event.id} className="inline-block w-56 flex-shrink-0">
                       <Card className="overflow-hidden h-full">
                         {/* Event Poster */}
                         <div className="relative h-72 overflow-hidden">
@@ -314,14 +372,6 @@ export function AlbumSection({ studentData, onShowEventSchedule }: AlbumSectionP
                                 <Calendar className="w-3 h-3" />
                                 <span className="text-xs">{event.date}</span>
                               </div>
-                              <div className="flex items-center gap-2 text-sm">
-                                <Clock className="w-3 h-3" />
-                                <span className="text-xs">{event.time}</span>
-                              </div>
-                              <div className="flex items-center gap-2 text-sm">
-                                <MapPin className="w-3 h-3" />
-                                <span className="text-xs line-clamp-1">{event.location}</span>
-                              </div>
                             </div>
                           </div>
                         </div>
@@ -329,9 +379,6 @@ export function AlbumSection({ studentData, onShowEventSchedule }: AlbumSectionP
                         {/* Additional Info */}
                         <CardContent className="p-3">
                           <p className="text-xs text-muted-foreground line-clamp-2">{event.description}</p>
-                          <Button size="sm" className="w-full mt-3" variant="outline">
-                            Ingatkan Saya
-                          </Button>
                         </CardContent>
                       </Card>
                     </div>
@@ -349,7 +396,8 @@ export function AlbumSection({ studentData, onShowEventSchedule }: AlbumSectionP
               <CardTitle className="text-base">Berita Terbaru</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {newsArticles.map((article) => (
+              {eventsError && <p className="text-sm text-muted-foreground">Berita belum dapat dibaca dari database. Periksa kebijakan akses Supabase.</p>}
+              {newsArticles.length === 0 ? <p className="py-8 text-center text-sm text-muted-foreground">Belum ada berita.</p> : newsArticles.map((article) => (
                 <div key={article.id} className="border rounded-lg p-4">
                   <div className="flex gap-3">
                     <div className="w-20 h-20 overflow-hidden rounded-lg flex-shrink-0">
@@ -362,23 +410,10 @@ export function AlbumSection({ studentData, onShowEventSchedule }: AlbumSectionP
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-2">
                         <h4 className="font-medium text-sm line-clamp-2">{article.title}</h4>
-                        <Badge variant="outline" className="text-xs flex-shrink-0">
-                          {article.category}
-                        </Badge>
                       </div>
                       <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{article.excerpt}</p>
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-muted-foreground">{article.date}</span>
-                        <div className="flex gap-2">
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Eye className="h-3 w-3" />
-                            {article.views}
-                          </div>
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Heart className="h-3 w-3" />
-                            {article.likes}
-                          </div>
-                        </div>
                       </div>
                     </div>
                   </div>

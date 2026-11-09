@@ -89,7 +89,7 @@ class OfflineApiClient {
     if (payment) {
       payment.status = 'paid';
       payment.paidDate = new Date().toISOString();
-      payment.paymentMethod = method;
+      payment.method = method;
       localStorage.savePayment(payment);
       return simulateAsync(payment);
     }
@@ -117,10 +117,10 @@ class OfflineApiClient {
       id: `emoney_${Date.now()}`,
       studentId,
       amount,
-      type: 'credit',
+      type: 'topup',
       description: 'Top Up Saldo',
-      timestamp: new Date().toISOString(),
-      balance: localStorage.getEmoneyBalance(studentId) + amount
+      category: 'Top Up',
+      date: new Date().toISOString(),
     };
     localStorage.saveEmoneyTransaction(transaction);
     return simulateAsync(transaction);
@@ -177,7 +177,7 @@ class OfflineApiClient {
       content,
       type,
       timestamp: new Date().toISOString(),
-      isRead: false
+      read: false
     };
     localStorage.saveChatMessage(message);
     return simulateAsync(message);

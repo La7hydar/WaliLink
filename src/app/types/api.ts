@@ -69,6 +69,7 @@ export interface VirtualAccount {
 
 // Academic Performance Types
 export interface AcademicScore {
+  studentId?: string;
   subject: string;
   score: number;
   fullMark: number;
@@ -78,6 +79,7 @@ export interface AcademicScore {
 }
 
 export interface PerformanceData {
+  studentId?: string;
   subject: string;
   score: number;
   fullMark: number;
@@ -86,6 +88,7 @@ export interface PerformanceData {
 // Achievement Types
 export interface Achievement {
   id: string;
+  studentId?: string;
   title: string;
   description: string;
   category: 'academic' | 'religious' | 'sports' | 'arts' | 'leadership';
@@ -99,6 +102,7 @@ export interface Achievement {
 // Discipline Types
 export interface DisciplineRecord {
   id: string;
+  studentId?: string;
   type: 'violation' | 'reward';
   title: string;
   description: string;
@@ -112,6 +116,7 @@ export interface DisciplineRecord {
 // Payment Types
 export interface Payment {
   id: string;
+  studentId?: string;
   type: 'spp' | 'emoney' | 'other';
   amount: number;
   description: string;
@@ -160,6 +165,7 @@ export interface WalletSummary {
 // Attendance Types
 export interface AttendanceRecord {
   id: string;
+  studentId?: string;
   date: string;
   type: 'prayer' | 'class' | 'activity';
   activity: string;
@@ -171,6 +177,7 @@ export interface AttendanceRecord {
 // Album Types
 export interface AlbumPhoto {
   id: string;
+  studentId?: string;
   url: string;
   title: string;
   description?: string;
@@ -182,6 +189,7 @@ export interface AlbumPhoto {
 // Chat Types
 export interface ChatContact {
   id: string;
+  studentId?: string;
   name: string;
   role: 'guardian' | 'admin' | 'ustadz' | 'dormitory';
   avatar?: string;
@@ -191,6 +199,7 @@ export interface ChatContact {
 
 export interface ChatMessage {
   id: string;
+  studentId?: string;
   senderId: string;
   receiverId: string;
   content: string;
@@ -202,6 +211,7 @@ export interface ChatMessage {
 // Notification Types
 export interface Notification {
   id: string;
+  studentId?: string;
   title: string;
   message: string;
   type: 'payment' | 'achievement' | 'discipline' | 'general' | 'emergency';
