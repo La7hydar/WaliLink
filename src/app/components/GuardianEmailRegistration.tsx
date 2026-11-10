@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, ClipboardCheck, Mail, UserRound } from 'lucide-react';
 import { getAuthService } from '../services/AuthService';
 import { Button } from './ui/button';
@@ -19,15 +19,19 @@ export function GuardianEmailRegistration({
   initialEmail = '',
   emailConfirmed: initialEmailConfirmed = false,
 }: GuardianEmailRegistrationProps) {
-  const [showRegistrationForm, setShowRegistrationForm] = useState(false);
+  const [showRegistrationForm, setShowRegistrationForm] = useState(initialEmailConfirmed);
   const [email, setEmail] = useState(initialEmail);
   const [childName, setChildName] = useState('');
+  const [selectedStudentId, setSelectedStudentId] = useState('');
+  const [children, setChildren] = useState<Array<{ id: string; fullName: string }>>([]);
   const [childBirthDate, setChildBirthDate] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [emailConfirmed, setEmailConfirmed] = useState(initialEmailConfirmed);
   const [waitingForConfirmation, setWaitingForConfirmation] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
+  const [isLoadingChildren, setIsLoadingChildren] = useState(false);
+  const [showChildSuggestions, setShowChildSuggestions] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -35,7 +39,41 @@ export function GuardianEmailRegistration({
       setEmail(initialEmail);
     }
     setEmailConfirmed(initialEmailConfirmed);
+    if (initialEmailConfirmed) setShowRegistrationForm(true);
   }, [initialEmail, initialEmailConfirmed]);
+
+  useEffect(() => {
+    if (!emailConfirmed || !showRegistrationForm) return;
+
+    let isActive = true;
+    setIsLoadingChildren(true);
+    setError('');
+
+    getAuthService()
+      .getGuardianRegistrationChildren()
+      .then((registeredChildren) => {
+        if (isActive) setChildren(registeredChildren);
+      })
+      .catch((childrenError) => {
+        if (isActive) {
+          setError(childrenError instanceof Error ? childrenError.message : 'Daftar anak gagal dimuat.');
+        }
+      })
+      .finally(() => {
+        if (isActive) setIsLoadingChildren(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [emailConfirmed, showRegistrationForm]);
+
+  const filteredChildren = useMemo(() => {
+    const search = childName.trim().toLocaleLowerCase('id');
+    return children.filter((child) =>
+      child.fullName.toLocaleLowerCase('id').includes(search),
+    );
+  }, [children, childName]);
 
   const completeRegistration = async () => {
     setError('');
@@ -44,7 +82,7 @@ export function GuardianEmailRegistration({
     try {
       const guardian = await getAuthService().completeGuardianEmailRegistration({
         email,
-        childName,
+        studentId: selectedStudentId,
         childBirthDate,
       });
       onAccountCreated(guardian);
@@ -66,7 +104,7 @@ export function GuardianEmailRegistration({
         setWaitingForConfirmation(true);
       } else {
         setEmailConfirmed(true);
-        await completeRegistration();
+        setShowRegistrationForm(true);
       }
     } catch (registrationError) {
       setError(registrationError instanceof Error ? registrationError.message : 'Pendaftaran gagal.');
@@ -88,6 +126,7 @@ export function GuardianEmailRegistration({
       setEmail(pendingEmail);
       setEmailConfirmed(true);
       setWaitingForConfirmation(false);
+      setShowRegistrationForm(true);
     } catch (confirmationError) {
       setError(confirmationError instanceof Error ? confirmationError.message : 'Status email gagal diperiksa.');
     } finally {
@@ -118,7 +157,7 @@ export function GuardianEmailRegistration({
                 Alur pendaftaran wali
               </CardTitle>
               <CardDescription>
-                Akun WaliLink ditautkan hanya ke data santri dan wali yang telah diperiksa pondok.
+                Akun WaliLink ditautkan hanya ke data santri dan wali yang telah diperiksa pondok. Email diverifikasi sebelum data anak ditampilkan.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -159,7 +198,11 @@ export function GuardianEmailRegistration({
           <div>
             <h1 className="text-xl font-semibold">Daftar Akun Wali</h1>
             <p className="text-sm text-muted-foreground">
-              {waitingForConfirmation ? 'Konfirmasi email untuk melanjutkan' : 'Verifikasi data yang sudah disetujui'}
+              {waitingForConfirmation
+                ? 'Konfirmasi email untuk melanjutkan'
+                : emailConfirmed
+                  ? 'Pilih anak dari data yang terdaftar'
+                  : 'Verifikasi email wali terlebih dahulu'}
             </p>
           </div>
         </div>
@@ -175,7 +218,7 @@ export function GuardianEmailRegistration({
                 <Mail className="h-5 w-5" /> Periksa email Anda
               </CardTitle>
               <CardDescription>
-                Tautan verifikasi dikirim ke {email}. Buka tautan itu, kembali ke aplikasi, lalu lanjutkan aktivasi.
+                Tautan verifikasi dikirim ke {email}. Buka tautan itu; setelah kembali ke WaliLink, pendaftaran akan dilanjutkan otomatis.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -210,24 +253,6 @@ export function GuardianEmailRegistration({
                   disabled={emailConfirmed}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="child-name">Nama lengkap anak</Label>
-                <Input
-                  id="child-name"
-                  autoComplete="off"
-                  value={childName}
-                  onChange={(event) => setChildName(event.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="child-birth-date">Tanggal lahir anak</Label>
-                <Input
-                  id="child-birth-date"
-                  type="date"
-                  value={childBirthDate}
-                  onChange={(event) => setChildBirthDate(event.target.value)}
-                />
-              </div>
               {!emailConfirmed && (
                 <>
                   <div className="space-y-2">
@@ -259,15 +284,96 @@ export function GuardianEmailRegistration({
                 </>
               )}
               {emailConfirmed && (
-                <p className="rounded-md bg-emerald-50 p-3 text-xs text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-200">
-                  Email terverifikasi. Lanjutkan pencocokan data untuk mengaktifkan akun.
-                </p>
+                <>
+                  <p className="rounded-md bg-emerald-50 p-3 text-xs text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-200">
+                    Email terverifikasi. Demi menjaga privasi, saran hanya memuat anak yang terkait dengan email wali ini.
+                  </p>
+                  <div className="space-y-2">
+                    <Label htmlFor="child-name">Cari dan pilih nama lengkap anak</Label>
+                    <Input
+                      id="child-name"
+                      autoComplete="off"
+                      role="combobox"
+                      aria-autocomplete="list"
+                      aria-expanded={showChildSuggestions && filteredChildren.length > 0}
+                      aria-controls="guardian-child-suggestions"
+                      placeholder={isLoadingChildren ? 'Memuat data anak...' : 'Ketik nama anak untuk mencari'}
+                      value={childName}
+                      disabled={isLoadingChildren || children.length === 0}
+                      onFocus={() => setShowChildSuggestions(true)}
+                      onChange={(event) => {
+                        setChildName(event.target.value);
+                        setSelectedStudentId('');
+                        setChildBirthDate('');
+                        setShowChildSuggestions(true);
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Escape') setShowChildSuggestions(false);
+                      }}
+                    />
+                    {showChildSuggestions && filteredChildren.length > 0 && (
+                      <div
+                        id="guardian-child-suggestions"
+                        role="listbox"
+                        aria-label="Saran nama anak terdaftar"
+                        className="max-h-48 overflow-y-auto rounded-md border bg-background p-1 shadow-md"
+                      >
+                        {filteredChildren.map((child) => (
+                          <button
+                            key={child.id}
+                            type="button"
+                            role="option"
+                            aria-selected={selectedStudentId === child.id}
+                            className="w-full rounded-sm px-3 py-2 text-left text-sm hover:bg-accent focus-visible:bg-accent focus-visible:outline-none"
+                            onClick={() => {
+                              if (selectedStudentId !== child.id) setChildBirthDate('');
+                              setChildName(child.fullName);
+                              setSelectedStudentId(child.id);
+                              setShowChildSuggestions(false);
+                              setError('');
+                            }}
+                          >
+                            {child.fullName}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {!isLoadingChildren && children.length === 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Belum ada data anak yang terhubung dengan email ini. Pastikan admin pondok sudah mencatat email wali dan menyetujui data anak.
+                      </p>
+                    )}
+                    {childName && !selectedStudentId && filteredChildren.length === 0 && (
+                      <p className="text-xs text-muted-foreground">Nama tidak ditemukan. Pilih nama dari saran yang tersedia.</p>
+                    )}
+                  </div>
+                  {selectedStudentId && (
+                    <div className="space-y-2">
+                      <Label htmlFor="child-birth-date">Tanggal lahir anak</Label>
+                      <Input
+                        id="child-birth-date"
+                        type="date"
+                        value={childBirthDate}
+                        onChange={(event) => setChildBirthDate(event.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Tanggal lahir dicocokkan dengan data pondok sebagai pemeriksaan tambahan.
+                      </p>
+                    </div>
+                  )}
+                </>
               )}
               {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
               <Button
                 className="w-full"
                 onClick={emailConfirmed ? completeRegistration : register}
-                disabled={isBusy || !email.trim() || !childName.trim() || !childBirthDate || (!emailConfirmed && !passwordsMatch)}
+                disabled={
+                  isBusy
+                  || !email.trim()
+                  || (emailConfirmed
+                    ? !selectedStudentId || !childBirthDate
+                    : !passwordsMatch)
+                }
               >
                 {isBusy
                   ? 'Memproses...'

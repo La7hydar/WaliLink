@@ -63,7 +63,7 @@ Diagram target memasukkan beberapa relasi konseptual; tabel `ADMISSION_APPLICATI
 1. Admin/website memasukkan email aktif ke `guardians.email` hanya setelah data disetujui.
 2. Signup aplikasi membuat Auth user email/password dan mengirim confirmation link.
 3. Auth session baru tersedia setelah email terkonfirmasi.
-4. Aplikasi membaca siswa yang terlihat melalui policy email RLS, lalu mencocokkan nama dan tanggal lahir.
+4. Implementasi lokal terbaru hanya menampilkan suggestion siswa yang terlihat melalui policy email RLS setelah konfirmasi email; wali memilih record dan tanggal lahir dicocokkan sebelum linking. Perubahan UI ini belum di-deploy atau diuji end-to-end.
 5. Aplikasi mengubah hanya `guardians.auth_user_id` ke Auth UID saat ini.
 6. Login berikutnya mengambil wali melalui `auth_user_id`; RLS membatasi semua data anak.
 

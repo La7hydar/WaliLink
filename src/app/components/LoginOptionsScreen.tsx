@@ -5,7 +5,6 @@ import {
   CircleHelp,
   Languages,
   LogIn,
-  Plus,
   ShieldCheck,
   UserPlus,
 } from 'lucide-react';
@@ -19,7 +18,6 @@ interface LoginOptionsScreenProps {
   onCreateGuardianAccount: () => void;
   onAdminLogin: () => void;
   onAdminSectionLogin?: () => void;
-  onCreateServer?: () => void;
   onTutorial?: () => void;
   onLanguageSettings?: () => void;
 }
@@ -31,7 +29,6 @@ export function LoginOptionsScreen({
   onCreateGuardianAccount,
   onAdminLogin,
   onAdminSectionLogin,
-  onCreateServer,
   onTutorial,
   onLanguageSettings,
 }: LoginOptionsScreenProps) {
@@ -144,21 +141,6 @@ export function LoginOptionsScreen({
                   <span>
                     <span className="block font-medium">Login Admin Bagian</span>
                     <span className="block text-xs font-normal text-muted-foreground">Untuk petugas dengan akses operasional terbatas</span>
-                  </span>
-                </Button>
-              )}
-
-              {onCreateServer && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={onCreateServer}
-                  className="h-auto w-full justify-start gap-3 rounded-xl py-3 text-left"
-                >
-                  <Plus className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  <span>
-                    <span className="block font-medium">Pendaftaran institusi baru</span>
-                    <span className="block text-xs font-normal text-muted-foreground">Ajukan pembuatan layanan untuk pondok atau sekolah</span>
                   </span>
                 </Button>
               )}

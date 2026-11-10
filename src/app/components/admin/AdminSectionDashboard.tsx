@@ -29,8 +29,6 @@ import {
   Phone,
   MapPin,
   User,
-  Eye,
-  EyeOff,
   Fingerprint,
   History,
   Home,
@@ -59,6 +57,7 @@ interface AdminSectionDashboardProps {
     role: string;
   };
   onLogout: () => void;
+  onBackToAdmin?: () => void;
 }
 
 type ViewType = 'home' | 'input' | 'payment-methods' | 'statistics' | 'settings' | 'history';
@@ -72,11 +71,10 @@ interface MenuCard {
   badge?: string;
 }
 
-export function AdminSectionDashboard({ adminData, onLogout }: AdminSectionDashboardProps) {
+export function AdminSectionDashboard({ adminData, onLogout, onBackToAdmin }: AdminSectionDashboardProps) {
   const [selectedView, setSelectedView] = useState<ViewType>('home');
   const [selectedLanguage, setSelectedLanguage] = useState('id');
   const [darkMode, setDarkMode] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const { changeLanguage } = useLanguage();
   
   // Notification settings
@@ -877,42 +875,13 @@ export function AdminSectionDashboard({ adminData, onLogout }: AdminSectionDashb
             <CardHeader>
               <CardTitle className="text-base">Ganti Password</CardTitle>
               <CardDescription>
-                Update password untuk keamanan akun
+                Verifikasi email diperlukan sebelum password dapat diubah.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="old-password">Password Lama</Label>
-                <Input 
-                  id="old-password" 
-                  type={showPassword ? "text" : "password"} 
-                  placeholder="Masukkan password lama"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="new-password">Password Baru</Label>
-                <Input 
-                  id="new-password" 
-                  type={showPassword ? "text" : "password"} 
-                  placeholder="Minimal 8 karakter"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirm-password">Konfirmasi Password Baru</Label>
-                <Input 
-                  id="confirm-password" 
-                  type={showPassword ? "text" : "password"} 
-                  placeholder="Ulangi password baru"
-                />
-              </div>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  checked={showPassword}
-                  onCheckedChange={setShowPassword}
-                />
-                <Label className="text-sm">Tampilkan password</Label>
-              </div>
-              <Button>Ganti Password</Button>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Akun admin bagian saat ini menggunakan login lokal/demo, bukan Supabase Auth. Perubahan password melalui email akan tersedia setelah autentikasi admin dipindahkan ke Supabase.
+              </p>
             </CardContent>
           </Card>
 
@@ -1045,6 +1014,24 @@ export function AdminSectionDashboard({ adminData, onLogout }: AdminSectionDashb
     }
   };
 
+  const navigationItems: Array<{ id: ViewType | 'logout'; label: string; icon: typeof Home }> = [
+    { id: 'home', label: 'Dashboard', icon: Home },
+    { id: 'input', label: 'Input', icon: Plus },
+    ...(adminData.section.toLowerCase().includes('keuangan')
+      ? [{ id: 'payment-methods' as const, label: 'Metode', icon: Fingerprint }]
+      : [{ id: 'history' as const, label: 'Riwayat', icon: History }]),
+    { id: 'statistics', label: 'Statistik', icon: BarChart3 },
+    { id: 'settings', label: 'Pengaturan', icon: Settings },
+    { id: 'logout', label: 'Keluar', icon: LogOut },
+  ];
+  const activeNavigationIndex = navigationItems.findIndex((item) => item.id === selectedView);
+  const targetNavigationIndex = Math.min(2, navigationItems.length - 1);
+  const shiftedNavigationItems = activeNavigationIndex < 0
+    ? navigationItems
+    : Array.from({ length: navigationItems.length }, (_, index) =>
+        navigationItems[(activeNavigationIndex - targetNavigationIndex + index + navigationItems.length) % navigationItems.length],
+      );
+
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
       {/* Header */}
@@ -1054,6 +1041,17 @@ export function AdminSectionDashboard({ adminData, onLogout }: AdminSectionDashb
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
+            {onBackToAdmin && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onBackToAdmin}
+                aria-label="Kembali ke dashboard admin utama"
+                className="text-white hover:bg-red-700"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            )}
             <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
               <SectionIcon className="h-5 w-5 text-white" />
             </div>
@@ -1071,13 +1069,48 @@ export function AdminSectionDashboard({ adminData, onLogout }: AdminSectionDashb
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-hidden">
+      <div className="min-h-0 flex-1 overflow-hidden">
         <ScrollArea className="h-full">
-          <div className="p-4 pb-20">
+          <div className="p-4 pb-[calc(6rem+env(safe-area-inset-bottom,0px))]">
             {renderContent()}
           </div>
         </ScrollArea>
       </div>
+
+      <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-background/95 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] backdrop-blur">
+        <div className="mx-auto flex max-w-lg items-center justify-around">
+          {shiftedNavigationItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = item.id === selectedView;
+            const isLogout = item.id === 'logout';
+
+            return (
+              <button
+                key={item.id}
+                type="button"
+                aria-label={item.label}
+                aria-current={isActive ? 'page' : undefined}
+                onClick={isLogout ? onLogout : () => setSelectedView(item.id as ViewType)}
+                className={`relative flex min-w-0 flex-1 flex-col items-center justify-center transition-all duration-300 ${
+                  isLogout
+                    ? 'text-destructive hover:text-destructive/80'
+                    : isActive
+                      ? '-translate-y-1 text-primary'
+                      : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <span className={`rounded-xl p-2 transition-all ${isActive ? 'scale-110 bg-primary/10 shadow-sm' : ''}`}>
+                  <Icon className="h-5 w-5" />
+                </span>
+                <span className={`mt-0.5 text-[10px] ${isActive ? 'font-semibold opacity-100' : 'opacity-75'}`}>
+                  {item.label}
+                </span>
+                {isActive && <span className="absolute -bottom-1 h-1 w-1 rounded-full bg-primary" />}
+              </button>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 }

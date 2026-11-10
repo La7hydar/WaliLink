@@ -102,3 +102,9 @@ Approval dilakukan manusia dengan role yang benar. Tanggal lahir boleh menjadi p
 ## Fase Pertama Website
 
 MVP website menyatukan halaman publik dan menu pendaftaran pada domain sama. Fase awal dapat memakai konten statis dan form admissions sederhana, tetapi status/approval sudah eksplisit. CMS, banyak bahasa, unggah dokumen, notifikasi multi-channel, dan payment pendaftaran dibuat sesudah workflow inti serta RLS teruji.
+
+## Status Implementasi Signup Wali — 9 November 2026
+
+Implementasi lokal signup wali sudah mengikuti bagian akhir alur aktivasi di diagram: email dikonfirmasi lebih dahulu; sesudah itu nama anak dipilih dari suggestion yang dibatasi oleh RLS ke email wali terverifikasi; tanggal lahir dicocokkan sebagai pemeriksaan tambahan sebelum UID ditautkan. Session pendaftaran tertunda dapat dipulihkan saat aplikasi dibuka kembali.
+
+Ini **bukan** implementasi website admissions atau approval workflow. Tabel pengajuan publik, portal status, antrean review, audit trail, notifikasi keputusan, dan provisioning saat approve masih belum dibangun. Signup yang diperbarui juga belum di-deploy dan belum dibuktikan dengan uji end-to-end email produksi. Lihat [laporan progress](../progress/README.md).

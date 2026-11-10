@@ -7,7 +7,7 @@ Status dokumen: hasil pembacaan repository dan Supabase project; bukan spesifika
 1. Welcome.
 2. Pilih server pondok.
 3. Pilih login wali, daftar akun wali, atau login admin.
-4. Wali login dengan email/password Supabase. Pendaftaran meminta email, password, nama anak, dan tanggal lahir; confirmation email harus selesai sebelum aktivasi.
+4. Wali login dengan email/password Supabase. Pada implementasi lokal terbaru, pendaftaran meminta verifikasi email terlebih dahulu; setelah email terverifikasi, nama anak dipilih dari saran yang terlihat melalui policy RLS, lalu tanggal lahir dicocokkan sebelum akun ditautkan. Perubahan ini belum di-deploy atau diuji end-to-end.
 5. Sesudah akun aktif, aplikasi membuka GuardianApp. Auth UID dipetakan ke `guardians.auth_user_id`; siswa dan ringkasan Beranda dibaca dengan RLS.
 
 Belum ada website penerimaan santri terpisah yang mengirim data ke database. Record guardian/student saat ini dipersiapkan admin lebih dulu; halaman signup aplikasi hanya dapat mencocokkan record tersebut.
@@ -56,7 +56,7 @@ Karena itu sistem saat ini bersifat **hybrid**, bukan sepenuhnya online ataupun 
 | `teachers` | Profil tenaga pengajar |
 | `Link` | Tautan/konfigurasi lama |
 
-RLS aktif untuk tabel inti wali/santri yang dipakai Beranda dan policy tambahan membatasi signup berdasarkan email terkonfirmasi yang sama dengan email yang telah dicatat admin pada guardian. Hak wali untuk linking dibatasi ke kolom `auth_user_id`; email dan nomor telepon tidak boleh diubah oleh client wali.
+RLS aktif untuk tabel inti wali/santri yang dipakai Beranda dan policy tambahan membatasi signup berdasarkan email terkonfirmasi yang sama dengan email yang telah dicatat admin pada guardian. Hak wali untuk linking dibatasi ke kolom `auth_user_id`; email dan nomor telepon tidak boleh diubah oleh client wali. UI suggestion terbaru baru menyaring nama melalui akses tersebut setelah konfirmasi email; uji lintas akun tetap diperlukan.
 
 ## Kesenjangan Yang Harus Dijaga
 
@@ -67,3 +67,9 @@ RLS aktif untuk tabel inti wali/santri yang dipakai Beranda dan policy tambahan 
 - Satu siswa saat ini terhubung melalui satu `guardian_id`; kebutuhan kedua orang tua belum dimodelkan.
 - `birth_date` adalah data pribadi. Cocokkan di query terbatas; jangan menampilkan daftar siswa global, mengirim tanggal lahir melalui URL, atau menggunakannya sebagai satu-satunya verifikasi.
 - Test email/user yang belum dikonfirmasi tidak memberi session. Jangan menandai Auth user terkonfirmasi manual untuk mensimulasikan verifikasi nyata.
+
+## Status Tambahan 9 November 2026
+
+- Signup kini mengharuskan wali memilih nama anak dari saran, bukan mengirim nama bebas; ID siswa yang dipilih dan tanggal lahir dicocokkan kembali pada penyelesaian aktivasi.
+- Setelah konfirmasi email, aplikasi dapat memulihkan session pendaftaran yang belum ditautkan. Kegagalan pencocokan/recovery masih memerlukan pengujian browser nyata.
+- Implementasi lokal lulus production build; perubahan belum dirilis ke Cloudflare. Rincian gap dan urutan validasi ada pada [laporan progress](../progress/README.md).

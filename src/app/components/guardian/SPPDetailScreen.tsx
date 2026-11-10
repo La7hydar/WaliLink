@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { ArrowLeft, Calendar, Receipt, Download, Eye } from 'lucide-react';
-import { ScrollArea } from '../ui/scroll-area';
 import { getGuardianPaymentData, type GuardianSppBill } from '../../services/GuardianPortalService';
 
 interface SPPDetailScreenProps {
@@ -47,7 +46,7 @@ export function SPPDetailScreen({ studentId, onBack, semester, onSemesterChange 
     : '-';
 
   return (
-    <div className="size-full bg-background safe-area-top safe-area-bottom">
+    <div className="min-h-full bg-background safe-area-top safe-area-bottom pb-[calc(6rem+env(safe-area-inset-bottom,0px))]">
       <div className="p-4 space-y-4">
         {/* Header */}
         <div className="flex items-center space-x-4">
@@ -119,8 +118,7 @@ export function SPPDetailScreen({ studentId, onBack, semester, onSemesterChange 
             </div>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-[400px]">
-              <div className="space-y-3">
+            <div className="space-y-3">
                 {isLoading ? <p className="py-6 text-center text-sm text-muted-foreground">Memuat tagihan...</p> : loadError ? (
                   <p className="py-6 text-center text-sm text-destructive">{loadError}</p>
                 ) : data.length === 0 ? (
@@ -173,8 +171,7 @@ export function SPPDetailScreen({ studentId, onBack, semester, onSemesterChange 
                     )}
                   </div>;
                 })}
-              </div>
-            </ScrollArea>
+            </div>
           </CardContent>
         </Card>
 

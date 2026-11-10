@@ -112,9 +112,30 @@ export class AuthService {
     };
   }
 
+  async getGuardianRegistrationChildren(): Promise<Array<{ id: string; fullName: string }>> {
+    const supabase = getSupabaseClient();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError) throw userError;
+    if (!user?.email_confirmed_at) {
+      throw new Error('Verifikasi email terlebih dahulu untuk melihat data anak.');
+    }
+
+    const { data, error } = await supabase
+      .from('students')
+      .select('id, full_name')
+      .order('full_name');
+
+    if (error) throw error;
+    return (data ?? []).map((student) => ({
+      id: student.id,
+      fullName: student.full_name,
+    }));
+  }
+
   async completeGuardianEmailRegistration(input: {
     email: string;
-    childName: string;
+    studentId: string;
     childBirthDate: string;
   }): Promise<any> {
     const supabase = getSupabaseClient();
@@ -128,7 +149,7 @@ export class AuthService {
     const { data: student, error: studentError } = await supabase
       .from('students')
       .select('id, guardian_id')
-      .eq('full_name', input.childName.trim())
+      .eq('id', input.studentId)
       .eq('birth_date', input.childBirthDate)
       .maybeSingle();
 
@@ -179,6 +200,29 @@ export class AuthService {
   async signOutGuardian(): Promise<void> {
     if (!isSupabaseConfigured) return;
     const { error } = await getSupabaseClient().auth.signOut();
+    if (error) throw error;
+  }
+
+  async requestPasswordReset(email: string): Promise<void> {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) throw new Error('Email akun tidak tersedia.');
+
+    const { error } = await getSupabaseClient().auth.resetPasswordForEmail(normalizedEmail, {
+      redirectTo: window.location.origin,
+    });
+    if (error) throw error;
+  }
+
+  async updatePasswordAfterEmailVerification(password: string): Promise<void> {
+    const supabase = getSupabaseClient();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError) throw userError;
+    if (!user?.email_confirmed_at) {
+      throw new Error('Sesi verifikasi email tidak ditemukan. Minta tautan verifikasi baru.');
+    }
+
+    const { error } = await supabase.auth.updateUser({ password });
     if (error) throw error;
   }
 

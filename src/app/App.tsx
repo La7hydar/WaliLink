@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { LoginScreen } from './components/LoginScreen';
 import { GuardianApp } from './components/GuardianApp';
@@ -15,6 +15,8 @@ import { AdminSectionLogin } from './components/admin/AdminSectionLogin';
 import { AdminSectionDashboard } from './components/admin/AdminSectionDashboard';
 import { initializeDataProvider } from './data-access/DataProviderFactory';
 import { getAuthService } from './services/AuthService';
+import { getSupabaseClient, isSupabaseConfigured } from './supabase/client';
+import { PasswordRecoveryScreen } from './components/PasswordResetFlow';
 
 type AppState = 
   | 'welcome' 
@@ -28,6 +30,7 @@ type AppState =
   | 'guardian-authenticated' 
   | 'admin-authenticated'
   | 'admin-section-authenticated'
+  | 'password-recovery'
   | 'tutorial'
   | 'language-selection';
 
@@ -55,6 +58,20 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedServer, setSelectedServer] = useState<ServerData | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const passwordRecoveryPending = useRef(false);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+
+    const { data: { subscription } } = getSupabaseClient().auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        passwordRecoveryPending.current = true;
+        setAppState('password-recovery');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Initialize data provider on app start
   useEffect(() => {
@@ -66,16 +83,26 @@ export default function App() {
         console.error('Failed to initialize data provider:', error);
       }
 
+      if (passwordRecoveryPending.current) return;
+
       try {
         const guardian = await getAuthService().getCurrentGuardian();
+        if (passwordRecoveryPending.current) return;
         if (guardian) {
           setCurrentUser({ type: 'guardian', ...guardian });
           setAppState('guardian-authenticated');
           return;
         }
 
+        const pendingRegistrationEmail = await getAuthService().getPendingGuardianRegistrationEmail();
+        if (passwordRecoveryPending.current) return;
+        if (pendingRegistrationEmail) {
+          setCurrentUser({ type: 'guardian-registration', email: pendingRegistrationEmail });
+          setAppState('guardian-signup');
+        }
+
       } catch (error) {
-        console.error('Failed to restore guardian session:', error);
+        console.error('Failed to restore guardian session or pending registration:', error);
       }
     };
 
@@ -269,13 +296,46 @@ export default function App() {
   };
 
   const handleLogout = () => {
-    if (currentUser?.type === 'guardian') {
+    if (currentUser?.type === 'guardian' || appState === 'password-recovery') {
       void getAuthService().signOutGuardian().catch((error) => {
-        console.error('Guardian sign out failed:', error);
+        console.error('Sign out failed:', error);
       });
     }
+    passwordRecoveryPending.current = false;
     setCurrentUser(null);
     setAppState('login-options');
+  };
+
+  const handlePasswordRecoveryComplete = async () => {
+    try {
+      const guardian = await getAuthService().getCurrentGuardian();
+      passwordRecoveryPending.current = false;
+      if (guardian) {
+        setCurrentUser({ type: 'guardian', ...guardian });
+        setAppState('guardian-authenticated');
+        return;
+      }
+
+      await getAuthService().signOutGuardian();
+      setCurrentUser(null);
+      setAppState(selectedServer ? 'login-options' : 'server-selection');
+    } catch (error) {
+      console.error('Failed to finish password recovery:', error);
+      passwordRecoveryPending.current = false;
+      try {
+        await getAuthService().signOutGuardian();
+      } catch (signOutError) {
+        console.error('Failed to sign out after password recovery error:', signOutError);
+      }
+      setCurrentUser(null);
+      setAppState(selectedServer ? 'login-options' : 'server-selection');
+    }
+  };
+
+  const handleBackToAdminDashboard = () => {
+    if (!currentUser?.previousUser) return;
+    setCurrentUser(currentUser.previousUser);
+    setAppState('admin-authenticated');
   };
 
   const handleShowTutorial = () => {
@@ -295,6 +355,7 @@ export default function App() {
         return (
           <ServerSelectionScreen 
             onServerSelected={handleServerSelected}
+            onCreateServer={handleCreateNewServer}
           />
         );
       
@@ -315,7 +376,6 @@ export default function App() {
             onCreateGuardianAccount={handleCreateGuardianAccount}
             onAdminLogin={handleAdminLogin}
             onAdminSectionLogin={handleAdminSectionLogin}
-            onCreateServer={handleCreateNewServer}
             onTutorial={handleShowTutorial}
             onLanguageSettings={handleShowLanguageSelection}
           />
@@ -385,8 +445,12 @@ export default function App() {
           <AdminSectionDashboard 
             adminData={currentUser}
             onLogout={handleLogout}
+            onBackToAdmin={currentUser?.previousUser ? handleBackToAdminDashboard : undefined}
           />
         );
+
+      case 'password-recovery':
+        return <PasswordRecoveryScreen onComplete={handlePasswordRecoveryComplete} />;
       
       case 'tutorial':
         return (
@@ -406,6 +470,7 @@ export default function App() {
         return (
           <ServerSelectionScreen
             onServerSelected={handleServerSelected}
+            onCreateServer={handleCreateNewServer}
           />
         );
     }

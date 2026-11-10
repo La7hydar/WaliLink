@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
-import { Building2, CheckCircle2, ChevronRight, MapPin, Search } from 'lucide-react';
+import { Building2, CheckCircle2, ChevronRight, MapPin, Plus, Search } from 'lucide-react';
 import { Input } from './ui/input';
 import { ScrollArea } from './ui/scroll-area';
+import { Button } from './ui/button';
 
 interface ServerSelectionScreenProps {
   onServerSelected: (serverData: {
@@ -9,6 +10,7 @@ interface ServerSelectionScreenProps {
     serverName: string;
     isMainServer: boolean;
   }) => void;
+  onCreateServer: () => void;
 }
 
 const availableSchools = [
@@ -20,7 +22,7 @@ const availableSchools = [
   },
 ];
 
-export function ServerSelectionScreen({ onServerSelected }: ServerSelectionScreenProps) {
+export function ServerSelectionScreen({ onServerSelected, onCreateServer }: ServerSelectionScreenProps) {
   const [query, setQuery] = useState('');
   const normalizedQuery = query.trim().toLocaleLowerCase('id-ID');
   const filteredSchools = useMemo(
@@ -112,6 +114,26 @@ export function ServerSelectionScreen({ onServerSelected }: ServerSelectionScree
                 </p>
               </div>
             )}
+          </div>
+
+          <div className="mt-8 border-t border-border pt-5">
+            <p className="mb-3 text-center text-sm text-muted-foreground">
+              Mengelola pondok atau sekolah yang belum terdaftar?
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-auto w-full justify-start gap-3 rounded-xl py-3"
+              onClick={onCreateServer}
+            >
+              <Plus className="h-4 w-4 shrink-0 text-emerald-700 dark:text-emerald-300" />
+              <span className="text-left">
+                <span className="block font-medium">Pendaftaran institusi baru</span>
+                <span className="block text-xs font-normal text-muted-foreground">
+                  Ajukan pembuatan layanan untuk pondok atau sekolah
+                </span>
+              </span>
+            </Button>
           </div>
 
           <p className="mt-auto pt-8 text-center text-xs text-muted-foreground">

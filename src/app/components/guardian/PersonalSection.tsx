@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 
 import { Badge } from '../ui/badge';
+import { PasswordResetAction } from '../PasswordResetFlow';
 
 interface PersonalSectionProps {
   studentData: {
@@ -374,10 +375,11 @@ export function PersonalSection({ studentData, onLogout, onShowStudentSettings }
             <CardTitle className="text-base">Keamanan & Privasi</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button variant="ghost" className="w-full justify-start">
-              <Lock className="h-4 w-4 mr-3" />
-              Ubah Password
-            </Button>
+            <div className="flex items-center gap-3">
+              <Lock className="h-4 w-4 shrink-0" />
+              <p className="font-medium">Ubah Password</p>
+            </div>
+            <PasswordResetAction email={studentData.email} />
             <Button variant="ghost" className="w-full justify-start">
               <Shield className="h-4 w-4 mr-3" />
               Keamanan Akun

@@ -312,7 +312,7 @@ export function GuardianApp({ guardianData, onLogout }: GuardianAppProps) {
       </header>
 
       {/* Content Area */}
-      <main className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900 pb-[calc(5rem+env(safe-area-inset-bottom,0px))]">
+      <main className="min-h-0 flex-1 overflow-auto bg-gray-50 dark:bg-gray-900 pb-[calc(5rem+env(safe-area-inset-bottom,0px))]">
         {homeLoading ? (
           <div className="p-6 text-center text-sm text-muted-foreground">Memuat data Beranda...</div>
         ) : homeError ? (

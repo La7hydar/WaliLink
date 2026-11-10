@@ -73,3 +73,18 @@ Urutan modul yang disarankan:
 - Uji mobile/desktop, empty/loading/error/duplicate states.
 - Update dokumen, data classification, dan release notes.
 - Periksa `.env`, logs, fixtures, screenshots, dan seed agar tidak berisi PII/secret produksi.
+
+## Status Eksekusi — 9 November 2026
+
+Status berikut melengkapi checklist fase di atas; checklist dan kriteria selesai yang belum terpenuhi tetap berlaku.
+
+| Fase | Status saat ini | Catatan |
+| --- | --- | --- |
+| 0 — Fondasi | Parsial | App, client Supabase, RLS inti, query Beranda, dan build tersedia. HTTP 200 domain custom sudah dicek, tetapi konfigurasi production dan Auth belum diuji menyeluruh. |
+| 1 — Aktivasi wali | Parsial | Signup email dan linking tersedia; suggestion nama setelah verifikasi email dan restore session dibuat di lokal. Belum di-deploy atau diuji end-to-end. |
+| 2 — Admissions | Belum | Website publik dan workflow pengajuan/review/approval masih berupa blueprint. |
+| 3 — Produk wali | Parsial | Sebagian Beranda dan data wali terhubung; fitur lain memiliki integrasi parsial, simulasi, atau belum diaudit. |
+| 4 — Admin | Belum / parsial | UI ada, tetapi auth role-based dan proses operasional berbasis database belum siap produksi. |
+| 5 — Go-live | Belum | SMTP, RLS test matrix, monitoring/backup, review keamanan, dan release gate belum seluruhnya diverifikasi. |
+
+Build lokal untuk perubahan signup terbaru lulus; Vite tetap memberi peringatan ukuran bundle utama di atas 500 KB. Lihat [laporan progress 9 November 2026](../progress/README.md) untuk bukti, gap, status branch, dan urutan tindak lanjut.

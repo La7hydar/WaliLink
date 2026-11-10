@@ -27,7 +27,9 @@ import {
   UserPlus,
   Globe,
   BarChart3,
-  Server
+  Server,
+  Home,
+  LayoutGrid
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -75,7 +77,6 @@ export function AdminDashboard({ adminData, onLogout, onAccessSection }: AdminDa
   const [selectedLanguage, setSelectedLanguage] = useState('id');
   const [showPassword, setShowPassword] = useState(false);
   const [showDatabaseConfig, setShowDatabaseConfig] = useState(false);
-  const [showSectionAccessModal, setShowSectionAccessModal] = useState(false);
   const { changeLanguage } = useLanguage();
 
   const [newAdmin, setNewAdmin] = useState({
@@ -711,25 +712,15 @@ export function AdminDashboard({ adminData, onLogout, onAccessSection }: AdminDa
       {/* Password Settings */}
       <Card>
         <CardHeader>
-          <CardTitle>Ganti Password</CardTitle>
-          <CardDescription>
-            Update password untuk keamanan akun
-          </CardDescription>
+      <CardTitle>Ganti Password</CardTitle>
+      <CardDescription>
+        Verifikasi email diperlukan sebelum password dapat diubah.
+      </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Password Lama</Label>
-            <Input type="password" />
-          </div>
-          <div className="space-y-2">
-            <Label>Password Baru</Label>
-            <Input type="password" />
-          </div>
-          <div className="space-y-2">
-            <Label>Konfirmasi Password Baru</Label>
-            <Input type="password" />
-          </div>
-          <Button>Ganti Password</Button>
+        <CardContent>
+      <p className="text-sm text-muted-foreground">
+        Akun admin saat ini menggunakan login lokal/demo, bukan Supabase Auth. Perubahan password melalui email akan tersedia setelah autentikasi admin dipindahkan ke Supabase.
+      </p>
         </CardContent>
       </Card>
     </div>
@@ -761,27 +752,49 @@ export function AdminDashboard({ adminData, onLogout, onAccessSection }: AdminDa
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Akses Cepat</CardTitle>
+                  <CardTitle>Selamat datang, {adminData?.name || 'Admin Utama'}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 gap-3">
-                    {adminSections.map((section) => {
-                      const Icon = section.icon;
-                      return (
-                        <Button
-                          key={section.id}
-                          variant="outline"
-                          onClick={() => setSelectedSection(section.id)}
-                          className="h-auto p-4 flex flex-col items-center space-y-2"
-                        >
-                          <Icon className="w-6 h-6" />
-                          <span className="text-xs text-center">{section.name}</span>
-                        </Button>
-                      );
-                    })}
-                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Ringkasan pengelolaan pondok. Gunakan menu Bagian di navigasi bawah untuk membuka modul operasional.
+                  </p>
                 </CardContent>
               </Card>
+            </div>
+          </div>
+        );
+
+      case 'admin-sections':
+        return (
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-lg font-semibold">Modul Admin Bagian</h2>
+              <p className="text-sm text-muted-foreground">Pilih area kerja yang ingin dibuka.</p>
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {adminSections.map((section) => {
+                const Icon = section.icon;
+                return (
+                  <Button
+                    key={section.id}
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      if (onAccessSection) onAccessSection(section.id);
+                      else setSelectedSection(section.id);
+                    }}
+                    className="h-auto justify-start gap-3 p-4 text-left"
+                  >
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block font-medium">{section.name}</span>
+                      <span className="block text-xs font-normal text-muted-foreground">Buka dashboard dan data bagian</span>
+                    </span>
+                  </Button>
+                );
+              })}
             </div>
           </div>
         );
@@ -930,10 +943,26 @@ export function AdminDashboard({ adminData, onLogout, onAccessSection }: AdminDa
     }
   };
 
-  const isMainAdmin = adminData?.role === 'Super Admin';
+  const isMainAdmin = ['super admin', 'super-admin', 'admin utama'].includes(
+    String(adminData?.role ?? '').toLocaleLowerCase('id'),
+  );
+  const navigationItems: Array<{ id: string; label: string; icon: typeof Home }> = [
+    { id: 'overview', label: 'Dashboard', icon: Home },
+    ...(isMainAdmin ? [{ id: 'admin-management', label: 'Admin', icon: Users }] : []),
+    ...(isMainAdmin ? [{ id: 'admin-sections', label: 'Bagian', icon: LayoutGrid }] : []),
+    { id: 'admin-settings', label: 'Pengaturan', icon: Settings },
+    { id: 'logout', label: 'Keluar', icon: LogOut },
+  ];
+  const activeNavigationIndex = navigationItems.findIndex((item) => item.id === selectedSection);
+  const targetNavigationIndex = Math.min(2, navigationItems.length - 1);
+  const shiftedNavigationItems = activeNavigationIndex < 0
+    ? navigationItems.slice(0, 5)
+    : Array.from({ length: navigationItems.length }, (_, index) =>
+        navigationItems[(activeNavigationIndex - targetNavigationIndex + index + navigationItems.length) % navigationItems.length],
+      ).slice(0, 5);
 
   return (
-    <div className="size-full bg-gray-50 dark:bg-gray-900 safe-area-top safe-area-bottom">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-gray-50 dark:bg-gray-900 safe-area-top safe-area-bottom">
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 border-b p-4">
         <div className="flex items-center justify-between">
@@ -951,76 +980,49 @@ export function AdminDashboard({ adminData, onLogout, onAccessSection }: AdminDa
         </div>
       </div>
 
-      {/* Navigation */}
-      <div className="bg-white dark:bg-gray-800 border-b">
-        <div className="overflow-x-auto">
-          <div className="flex p-2 space-x-1 min-w-max">
-            <Button
-              variant={selectedSection === 'overview' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setSelectedSection('overview')}
-              className="whitespace-nowrap flex-shrink-0"
-            >
-              <Settings className="w-4 h-4 mr-2" />
-              Overview
-            </Button>
-            
-            {isMainAdmin && (
-              <>
-                <Button
-                  variant={selectedSection === 'admin-management' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setSelectedSection('admin-management')}
-                  className="whitespace-nowrap flex-shrink-0"
-                >
-                  <Key className="w-4 h-4 mr-2" />
-                  Manajemen Admin
-                </Button>
-              </>
-            )}
-
-            {adminSections.map((section) => {
-              const Icon = section.icon;
-              return (
-                <Button
-                  key={section.id}
-                  variant={selectedSection === section.id ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => {
-                    setSelectedSection(section.id);
-                    if (onAccessSection) {
-                      onAccessSection(section.id);
-                    }
-                  }}
-                  className="whitespace-nowrap flex-shrink-0"
-                >
-                  <Icon className="w-4 h-4 mr-2" />
-                  {section.name}
-                </Button>
-              );
-            })}
-
-            <Button
-              variant={selectedSection === 'admin-settings' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setSelectedSection('admin-settings')}
-              className="whitespace-nowrap flex-shrink-0"
-            >
-              <Settings className="w-4 h-4 mr-2" />
-              Pengaturan
-            </Button>
-          </div>
-        </div>
-      </div>
-
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-hidden">
         <ScrollArea className="h-full">
-          <div className="p-4 pb-20">
+          <div className="p-4 pb-[calc(6rem+env(safe-area-inset-bottom,0px))]">
             {renderSectionContent()}
           </div>
         </ScrollArea>
       </div>
+
+      <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-gray-200 bg-white/95 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] backdrop-blur dark:border-gray-800 dark:bg-gray-900/95">
+        <div className="mx-auto flex max-w-lg items-center justify-around">
+          {shiftedNavigationItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = item.id === selectedSection;
+            const isLogout = item.id === 'logout';
+
+            return (
+              <button
+                key={item.id}
+                type="button"
+                aria-label={item.label}
+                aria-current={isActive ? 'page' : undefined}
+                onClick={isLogout ? onLogout : () => setSelectedSection(item.id)}
+                className={`relative flex min-w-0 flex-1 flex-col items-center justify-center transition-all duration-300 ${
+                  isLogout
+                    ? 'text-red-600 hover:text-red-700 dark:text-red-400'
+                    : isActive
+                      ? '-translate-y-1 text-emerald-700 dark:text-emerald-300'
+                      : 'text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                }`}
+              >
+                <span className={`rounded-xl p-2 transition-all ${isActive ? 'scale-110 bg-emerald-500/10 shadow-sm' : ''}`}>
+                  <Icon className="h-5 w-5" />
+                </span>
+                <span className={`mt-0.5 text-[10px] ${isActive ? 'font-semibold opacity-100' : 'opacity-75'}`}>
+                  {item.label}
+                </span>
+                {isActive && <span className="absolute -bottom-1 h-1 w-1 rounded-full bg-emerald-500" />}
+              </button>
+            );
+          })}
+        </div>
+      </nav>
 
       {/* Database Config Screen Overlay */}
       {showDatabaseConfig && (
